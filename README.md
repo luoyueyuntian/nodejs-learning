@@ -8,7 +8,7 @@
 + [Node.js 模块](./doc/nodejs模块.md)
 + [path](./doc/pathr.md)
 
-#### 应用
+#### 周边相关学习
 + [npm的使用](./doc/npm使用技巧.md)
 
 #### 调试nodejs
