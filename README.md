@@ -3,7 +3,10 @@
 
 #### api学习
 + [node操作文件模块](./doc/node-fs.md)
++ [fs](./doc/fs.md)
 + [Buffer](./doc/node-buffer.md)
++ [Node.js 模块](./doc/nodejs模块.md)
++ [path](./doc/pathr.md)
 
 #### 应用
 + [npm的使用](./doc/npm使用技巧.md)
