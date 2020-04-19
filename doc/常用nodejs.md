@@ -27,6 +27,17 @@ restify是一个基于Nodejs的REST应用框架，支持服务器端和客户端
 restify提供了DTrace功能，为程序调式带来新的便利！
 + [restify —— 官方文档](http://restify.com/)
 
+#### feathers
+为现代化应用而设计的网络架构。它具有面向服务，实时性，简单抽象的特点。
++ [FeathersJS  —— 官方文档](https://docs.feathersjs.com/)
+
+#### moleculer
+基于 Node.js 的响应式微服务框架
++ [Moleculer  —— 官方文档](https://moleculer.services/zh/)
+
+#### pomelo
+由网易开发的基于node.js开发的高性能、分布式游戏服务器框架， 也可作为高实时web应用框架。
+
 ## 数据库相关
 #### 数据库驱动 - Mongoose
 Mongoose为模型提供了一种直接的，基于scheme结构去定义你的数据模型。它内置数据验证， 查询构建，业务逻辑钩子等，开箱即用。
@@ -48,6 +59,10 @@ Sequelize 是 Node 的一个 ORM(Object-Relational Mapping) 框架，用来方�
 #### node_redis
 node的redis客户端
 + [github地址](https://github.com/NodeRedis/node_redis)
+
+#### typeorm
+一个ORM框架，它可以运行在NodeJS、浏览器、Cordova、PhoneGap、Ionic、React Native、Expo和Electron平台上，可以与TypeScript和JavaScript (ES5, ES6, ES7)一起使用。
++ [typeorm开发文档](https://typeorm.io/)
 
 ## 请求连接
 #### Web Socket - Socket.IO
@@ -123,6 +138,9 @@ anywhere
 定时任务[node-cron](https://www.npmjs.com/package/cron)
 
 ## 工具
++ emailjs：可使用nodejs发送邮件
++ node-qrcode：二维码生成器
++ webdriverio：自动化测试框架
 + Node.js-FriendlyMai
 一个简洁现代且易于使用的Nodejs邮件发送包
 
@@ -159,6 +177,17 @@ lodash 实用工具库，封装了诸多对字符串、数组、对象等常见�
 + md5-password-cracker.js
 使用JavaScript Web Workers破解MD5密码
 [源码](https://github.com/feross/md5-password-cracker.js)
++ psd.js：用于处理photoshop生成的psd文件
++ nodenv：用来管理多个nodejs版本
++ dotenv：加载文件中的环境变量到进程中
++ node-canvas：在node环境中使用canvas
++ swagger-node：api文档生成工具
++ jsdom：由 javascript实现的一系列web标准，特别是 WHATWG 组织制定的DOM和 HTML 标准，用于在 nodejs 中使用
++ node-lru-cache：Nodejs基于LRU算法实现的缓存
++ inquirer.js：一个用户与命令行交互的工具
++ elasticsearch-js：官方的Elasticsearch 客户端库nodejs 版
++ json-server：一个 Node 模块，运行 Express 服务器，你可以指定一个 json 文件作为 api 的数据源。
++ nodejs-dashboard：用于终端应用的遥测仪表板 
 
 ## Express中间件
 + body-parser
