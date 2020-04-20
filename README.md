@@ -10,6 +10,7 @@
 
 #### 周边相关学习
 + [npm的使用](./doc/npm使用技巧.md)
++ [npm私服搭建](./doc/npm私服搭建.md)
 
 #### 调试nodejs
 
