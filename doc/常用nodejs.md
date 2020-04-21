@@ -150,7 +150,7 @@ anywhere
 
 + mockjs 模拟接口数据
 
-lodash 实用工具库，封装了诸多对字符串、数组、对象等常见数据类型的处理函数
++ lodash 实用工具库，封装了诸多对字符串、数组、对象等常见数据类型的处理函数
 
 + moment 日期处理库
 
@@ -188,6 +188,8 @@ lodash 实用工具库，封装了诸多对字符串、数组、对象等常见�
 + elasticsearch-js：官方的Elasticsearch 客户端库nodejs 版
 + json-server：一个 Node 模块，运行 Express 服务器，你可以指定一个 json 文件作为 api 的数据源。
 + nodejs-dashboard：用于终端应用的遥测仪表板 
++ chalk：一个颜色的插件，可以控制命令行中文本的颜色
++ commander：一个轻巧的nodejs模块，提供了用户命令行输入和参数解析强大功能。这个工具主要是用来实现用户在命令的交互。
 
 ## Express中间件
 + body-parser
