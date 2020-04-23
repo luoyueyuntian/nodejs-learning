@@ -6,7 +6,6 @@ Express 是一个保持最小规模的灵活的 Node.js Web 应用程序开发�
 + [Express —— 官方文档](http://www.expressjs.com.cn/)
 + [github地址](https://github.com/expressjs/express)
 
-
 #### koa
 Koa 是一个新的 web 框架，由 Express 幕后的原班人马打造， 致力于成为 web 应用和 API 开发领域中的一个更小、更富有表现力、更健壮的基石。 通过利用 async 函数，Koa 帮你丢弃回调函数，并有力地增强错误处理。 Koa 并没有捆绑任何中间件， 而是提供了一套优雅的方法，帮助您快速而愉快地编写服务端应用程序。
 + [Koa —— 官方文档](https://koa.bootcss.com/)
@@ -37,6 +36,16 @@ restify提供了DTrace功能，为程序调式带来新的便利！
 
 #### pomelo
 由网易开发的基于node.js开发的高性能、分布式游戏服务器框架， 也可作为高实时web应用框架。
+
+#### Meteor.JS
+NodeJS 的全栈框架，允许用户构建实时应用程序。用于创建基于移动和基于 Web 的 javascript 应用。
+
+#### Loopback
+基于Express 的web架构、提供一套ORM解决方案、结合Express提供便捷的RESTFul接入
+
+#### NestJS
+NestJS 框架-一种渐进式的 NodeJS 框架，用于构建高效、可靠和可扩展的服务器端应用程序
+
 
 ## 数据库相关
 #### 数据库驱动 - Mongoose
@@ -190,8 +199,9 @@ anywhere
 + nodejs-dashboard：用于终端应用的遥测仪表板 
 + chalk：一个颜色的插件，可以控制命令行中文本的颜色
 + commander：一个轻巧的nodejs模块，提供了用户命令行输入和参数解析强大功能。这个工具主要是用来实现用户在命令的交互。
++ mocha：JavaScript的一种单元测试框架，既可以在浏览器环境下运行，也可以在Node.js环境下运行。
 
-## Express中间件
+## 中间件
 + body-parser
 
 body-parser是一个HTTP请求体解析的中间件，使用这个模块可以解析JSON、Raw、文本、URL-encoded格式的请求体，
@@ -215,5 +225,9 @@ body-parser是一个HTTP请求体解析的中间件，使用这个模块可以�
 + serve-favicon
 
 serve-favicon是Node.js中间件，用于服务图标。
+
++ koa-jwt
+用于校验 JSON Web Tokens (JWT) koa中间件
+
 
 更多中间件可参看[Nodejs基础中间件Connect](https://www.cnblogs.com/chris-oil/p/5625437.html)
