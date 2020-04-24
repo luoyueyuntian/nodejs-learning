@@ -1,5 +1,3 @@
-
-
 ## Web 应用程序开发框架
 #### express
 Express 是一个保持最小规模的灵活的 Node.js Web 应用程序开发框架，为 Web 和移动应用程序提供一组强大的功能。
@@ -48,26 +46,86 @@ NestJS 框架-一种渐进式的 NodeJS 框架，用于构建高效、可靠和�
 
 
 ## 数据库相关
-#### 数据库驱动 - Mongoose
+#### Cassandra
+Cassandra 是一个来自 Apache 的分布式数据库，具有高度可扩展性，可用于管理大量的结构化数据。它提供了高可用性，没有单点故障。
++ [关于cassandra](https://zhuanlan.zhihu.com/p/78255146)
++ [cassandra - 源码](https://github.com/datastax/nodejs-driver)
+
+#### Couchbase
+CouchBase是一款开源的，分布式的nosql数据库，主要用于分布式缓存和数据存储领域。能够通过manage cache提供快速的亚毫米级别的k-v存储操作，并且提供快速的查询和其功能强大的能够指定SQL-like查询的查询引擎。
++ [Couchbase —— 文档](https://docs.couchbase.com/nodejs-sdk/3.0/hello-world/start-using-sdk.html)
++ [Couchbase - 源码](https://github.com/datastax/nodejs-driver)
++ [Couchbase - 相关介绍](https://sq.163yun.com/blog/article/189804692240617472)
+
+#### CouchDB
++ [CouchDB - 源码](https://github.com/apache/couchdb-nano)
++ [couchDB官方网站](http://couchdb.apache.org/)
++ [couchDB wiki](http://wiki.apache.org/couchdb/)
++ [couchDB上手指南](http://erlang-china.org/study/couchdb-guide.html)
++ [couchDB相关介绍](https://feeler.blog.csdn.net/article/details/103212979)
+
+#### LevelDB
+LevelDB是Google开源的持久化KV单机数据库，具有很高的随机写，顺序读/写性能，但是随机读的性能很一般，也就是说，LevelDB很适合应用在查询较少，而写很多的场景。
++ [LevelDB - 源码](https://github.com/Level/levelup)
++ [LevelDB 介绍1](https://www.jianshu.com/p/223f0c73ddc2)
++ [LevelDB 介绍2](https://blog.csdn.net/qq_26222859/article/details/79645203)
+
+#### - Mongoose
 Mongoose为模型提供了一种直接的，基于scheme结构去定义你的数据模型。它内置数据验证， 查询构建，业务逻辑钩子等，开箱即用。
 + [Mongoose —— 文档](http://www.mongoosejs.net/)
++ [Mongoose - 源码](https://github.com/mongodb/node-mongodb-native)
 
 
 #### 数据库链接 - sequelize
 Sequelize 是 Node 的一个 ORM(Object-Relational Mapping) 框架，用来方便数据库操作。
 + [Sequelize —— 文档](https://sequelize.org/)
 
-#### 数据库链接 - mysql2
+#### mysql
+关系型数据库管理系统
++ [mysql - 源码](https://github.com/mysqljs/mysql)
+
+#### mysql2
 适用于Node.js的MySQL客户端，侧重于性能。 支持预备语句，非utf8编码，二进制日志协议，压缩，ssl等
 + [mysql2 —— 源码](https://github.com/mysqljs/mysql)
 
 #### elasticsearch-js
 适用于Node.js的官方Elasticsearch客户端库
 + [官方github](https://github.com/elastic/elasticsearch-js)
++ [elasticsearch —— 文档](https://www.elastic.co/guide/en/elasticsearch/client/javascript-api/current/index.html)
+
+#### Neo4j
+Neo4j是一个高性能的,NOSQL图形数据库，它将结构化数据存储在网络上而不是表中。
++ [Neo4j —— 源码](https://github.com/hacksparrow/apoc)
++ [Neo4j —— 介绍](https://www.cnblogs.com/jpfss/p/10874001.html)
+
+#### oracledb
+一种适用于大型、中型和微型计算机的关系数据库管理系统,它使用SQL(Structured guery language)作为它的数据库语言。
++ [oracledb —— 源码](https://github.com/oracle/node-oracledb)
++ [oracledb —— 文档](http://oracle.github.io/node-oracledb/)
++ [oracledb —— 介绍1](https://www.jianshu.com/p/83833b86eeca)
++ [oracledb —— 介绍2](https://cloud.tencent.com/developer/news/348741)
+
+#### PostgreSQL
+一个功能强大的开源对象关系数据库管理系统。 用于安全地存储数据; 支持最佳做法，并允许在处理请求时检索它们。
++ [PostgreSQL —— 源码](https://github.com/vitaly-t/pg-promise)
++ [PostgreSQL —— 文档](http://vitaly-t.github.io/pg-promise/)
++ [PostgreSQL —— 介绍](https://blog.csdn.net/puss0/article/details/80412401)
++ [PostgreSQL —— 社区主页](http://www.postgres.cn/index.php/v2/home)
++ [PostgreSQL新手入门](http://www.ruanyifeng.com/blog/2013/12/getting_started_with_postgresql.html)
 
 #### node_redis
 node的redis客户端
 + [github地址](https://github.com/NodeRedis/node_redis)
+
+#### SQL Server
+SqlServer驱动模块
++ [github地址](https://github.com/tediousjs/tedious)
++ [在线文档](http://tediousjs.github.io/tedious/)
+
+#### SQLite
++ [SQLite —— 源码](https://github.com/mapbox/node-sqlite3)
++ [SQLite —— api文档](https://github.com/mapbox/node-sqlite3/wiki)
+
 
 #### typeorm
 一个ORM框架，它可以运行在NodeJS、浏览器、Cordova、PhoneGap、Ionic、React Native、Expo和Electron平台上，可以与TypeScript和JavaScript (ES5, ES6, ES7)一起使用。
