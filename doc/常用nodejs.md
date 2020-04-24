@@ -172,10 +172,15 @@ apiDoc通过源代码中的API注释创建文档。
 Slate可帮助您创建美观，智能，响应迅速的API文档。
 + [github地址](https://github.com/slatedocs/slate)
 
+#### swagger-node：api文档生成工具
 
 ## 应用管理
 + nodemon
 文件变动监控(自动重启)，(启动服务器脚本中替换 node 即可)
+
++ strong-pm
+进程管理Node.js 应用[github](https://github.com/strongloop/strong-pm/)、[官方文档](http://strong-pm.io/)
+
 
 + pm2
 进程管理:
@@ -185,6 +190,9 @@ Slate可帮助您创建美观，智能，响应迅速的API文档。
 
 + serve-favicon
 带重启(nodemon用于开发环境)，日志，负载均衡
+
++ SystemD
+
 
 ## 加密
 + md5加密
@@ -248,11 +256,10 @@ anywhere
 + nodenv：用来管理多个nodejs版本
 + dotenv：加载文件中的环境变量到进程中
 + node-canvas：在node环境中使用canvas
-+ swagger-node：api文档生成工具
+
 + jsdom：由 javascript实现的一系列web标准，特别是 WHATWG 组织制定的DOM和 HTML 标准，用于在 nodejs 中使用
 + node-lru-cache：Nodejs基于LRU算法实现的缓存
 + inquirer.js：一个用户与命令行交互的工具
-+ elasticsearch-js：官方的Elasticsearch 客户端库nodejs 版
 + json-server：一个 Node 模块，运行 Express 服务器，你可以指定一个 json 文件作为 api 的数据源。
 + nodejs-dashboard：用于终端应用的遥测仪表板 
 + chalk：一个颜色的插件，可以控制命令行中文本的颜色
