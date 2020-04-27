@@ -175,9 +175,148 @@ child_process.exec() 不会替换现有的进程，且使用 shell 来执行命�
 
 如果调用此方法的 `util.promisify()` 版本，则返回的 Promise 会返回具有 stdout 属性和 stderr 属性的 Object。 返回的 ChildProcess 实例会作为 child 属性附加到该 Promise。 如果出现错误（包括导致退出码不是 0 的任何错误），则返回被拒绝的 Promise，并带上与回调中相同的 error 对象，但是还有两个另外的属性 stdout 和 stderr。
 
+## 创建同步的进程
+`child_process.spawnSync()`、`child_process.execSync()` 和 `child_process.execFileSync()` 方法是同步的，并且将会阻塞 Node.js 事件循环、暂停任何其他代码的执行，直到衍生的进程退出。
 
+阻塞这些调用对于简化通用的脚本任务和简化应用程序配置在启动时的加载或处理都非常有用。
 
+### `child_process.execFileSync(file[, args][, options])`
++ `file <string>` 要运行的可执行文件的名称或路径。
++ `args <string[]>` 字符串参数的列表。
++ `options <Object>`
+    `cwd <string>` 子进程的当前工作目录。
+    `input <string> | <Buffer> | <TypedArray> | <DataView>` 该值将会作为 stdin 传给衍生的进程。提供此值将会覆盖 stdio[0]。
+    `stdio <string> | <Array>` 子进程的 stdio 配置。默认情况下，除非指定了 stdio，否则 stderr 将会被输出到父进程的 stderr。默认值: 'pipe'。
+    `env <Object>` 环境变量的键值对。默认值: process.env。
+    `uid <number>` 设置进程的用户标识，参见 setuid(2)。
+    `gid <number>` 设置进程的群组标识，参见 setgid(2)。
+    `timeout <number>` 允许进程运行的最长时间，以毫秒为单位。默认值: undefined。
+    `killSignal <string> | <integer>` 当衍生的进程将被终止时使用的信号值。默认值: 'SIGTERM'。
+    `maxBuffer <number>` stdout 或 stderr 上允许的最大字节数。如果超过限制，则子进程会被终止。参见 maxBuffer 与 Unicode 中的警告。默认值: 1024 * 1024。
+    `encoding <string>` 用于所有 stdio 输入和输出的字符编码。默认值: 'buffer'。
+    `windowsHide <boolean>` 隐藏子进程的控制台窗口（在 Windows 系统上通常会创建）。默认值: false。
+    `shell <boolean> | <string>` 如果为 true，则在 shell 中运行 command。 在 Unix 上使用 '/bin/sh'，在 Windows 上使用 process.env.ComSpec。 可以将不同的 shell 指定为字符串。 参见 shell 的要求与 Windows 默认的 shell。 默认值: false（没有 shell）。
++ 返回: `<Buffer> | <string>` 命令的 stdout。
 
+`child_process.execFileSync()` 方法通常与 `child_process.execFile()` 相同，但该方法在子进程完全关闭之前不会返回。 当遇到超时并发送 `killSignal` 时，该方法也需等到进程完全退出后才返回。
 
+如果子进程拦截并处理了 `SIGTERM` 信号但未退出，则父进程仍将等待子进程退出。
 
-这些进程都是主进程的子进程。主进程与子进程之间可以通过IPC管道相互传递信息。子进程退出后由父进程负责回收子进程，如果父进程未回收子进程，则子进程会变成僵尸进程，无法正常结束，其占用的资源不会被释放（释放终止进程所使用的所有存储区，关闭所有打开的文件等），即使通过root身份kill也不能杀死僵尸进程，唯一的补救办法就是把主进程（僵尸进程的父进程）杀死，僵尸进程自动变为“孤儿进程”，过继给1号进程init，init始终会负责清理僵死进程。
+如果进程超时或具有非零的退出码，则此方法将抛出一个 Error，其中包含底层 `child_process.spawnSync()` 的完整结果。
+
+如果启用了 shell 选项，则不要将未经过处理的用户输入传给此函数。 包含 shell 元字符的任何输入都可用于触发任意命令的执行。
+
+### `child_process.execSync(command[, options])`
++ command <string> 要运行的命令。
++ options <Object>
+    + `cwd <string>` 子进程的当前工作目录。
+    + `input <string> | <Buffer> | <TypedArray> | <DataView>` 该值将会作为 stdin 传给衍生的进程。提供此值将会覆盖 stdio[0]。
+    + `stdio <string> | <Array>` 子进程的 stdio 配置。默认情况下，除非指定了 stdio，否则 stderr 将会被输出到父进程的 stderr。默认值: 'pipe'。
+    + `env <Object>` 环境变量的键值对。默认值: process.env。
+    + `shell <string>` 用于执行命令的 shell。参见 shell 的要求与 Windows 默认的 shell。 默认值: Unix 上是 '/bin/sh'，Windows 上是 process.env.ComSpec。
+    + `uid <number>` 设置进程的用户标识，参见 setuid(2)。
+    + `gid <number>` 设置进程的群组标识，参见 setgid(2)。
+    + `timeout <number>` 允许进程运行的最长时间，以毫秒为单位。默认值: undefined。
+    + `killSignal <string> | <integer>` 当衍生的进程将被终止时使用的信号值。默认值: 'SIGTERM'。
+    + `maxBuffer <number>` stdout 或 stderr 上允许的最大字节数。如果超过限制，则子进程会被终止并且截断任何输出。参见 maxBuffer 与 Unicode 中的警告。默认值: 1024 * 1024。
+    + `encoding <string>` 用于所有 stdio 输入和输出的字符编码。默认值: 'buffer'。
+    + `windowsHide <boolean>` 隐藏子进程的控制台窗口（在 Windows 系统上通常会创建）。默认值: false。
++ 返回: `<Buffer> | <string>` 命令的 stdout。
+
+`child_process.execSync()` 方法通常与 `child_process.exec()` 相同，但该方法在子进程完全关闭之前不会返回。 当遇到超时并发送 `killSignal` 时，该方法也需等到进程完全退出后才返回。 如果子进程拦截并处理了 `SIGTERM` 信号但未退出，则父进程将会等待直到子进程退出。
+
+如果进程超时或具有非零的退出码，则此方法将会抛出错误。 Error 对象将会包含 `child_process.spawnSync()` 的完整结果。
+
+切勿将未经过处理的用户输入传给此函数。 包含 shell 元字符的任何输入都可用于触发任意命令的执行。
+
+### `child_process.spawnSync(command[, args][, options])`
++ `command <string>` 要运行的命令。
++ `args <string[]>` 字符串参数的列表。
++ `options <Object>`
+    + `cwd <string>` 子进程的当前工作目录。
+    + `input <string> | <Buffer> | <TypedArray> | <DataView>` 该值将会作为 stdin 传给衍生的进程。提供此值将会覆盖 stdio[0]。
+    + `argv0 <string>` 显式地设置发送给子进程的 argv[0] 的值。如果没有指定，则将会被设置为 command 的值。
+    + `stdio <string> | <Array>` 子进程的 stdio 配置。
+    + `env <Object>` 环境变量的键值对。默认值: process.env。
+    + `uid <number>` 设置进程的用户标识，参见 setuid(2)。
+    + `gid <number>` 设置进程的群组标识，参见 setgid(2)。
+    + `timeout <number>` 允许进程运行的最长时间，以毫秒为单位。默认值: undefined。
+    + `killSignal <string> | <integer>` 当衍生的进程将被终止时使用的信号值。默认值: 'SIGTERM'。
+    + `maxBuffer <number>` stdout 或 stderr 上允许的最大字节数。如果超过限制，则子进程会被终止并且截断任何输出。参见 maxBuffer 与 Unicode 中的警告。默认值: 1024 * 1024。
+    + `encoding <string>` 用于所有 stdio 输入和输出的字符编码。默认值: 'buffer'。
+    + `shell <boolean> | <string>` 如果为 true，则在 shell 中运行 command。 在 Unix 上使用 '/bin/sh'，在 Windows 上使用 process.env.ComSpec。 可以将不同的 shell 指定为字符串。 参见 shell 的要求与 Windows 默认的 shell。 默认值: false（没有 shell）。
+    + `windowsVerbatimArguments <boolean>` 在 Windows 上不为参数加上引号或转义。在 Unix 上忽略。如果指定了 shell 并且是 CMD，则自动设为 true。默认值: false。
+    + `windowsHide <boolean>` 隐藏子进程的控制台窗口（在 Windows 系统上通常会创建）。默认值: false。
++ 返回: `<Object>`
+    + `pid <number>` 子进程的 pid。
+    + `output <Array>` stdio 输出的结果数组。
+    + `stdout <Buffer> | <string>` output[1] 的内容。
+    + `stderr <Buffer> | <string>` output[2] 的内容。
+    + `status <number>` 子进程的退出码，如果子进程因信号而终止，则为 null。
+    + `signal <string>` 用于杀死子进程的信号，如果子进程不是因信号而终止，则为 null。
+    + `error <Error>` 如果子进程失败或超时的错误对象。
+
+`child_process.spawnSync()` 方法通常与 `child_process.spawn()` 相同，但在子进程完全关闭之前该函数不会返回。 当遇到超时并发送 `killSignal` 时，该方法也需等到进程完全退出后才返回。 如果进程拦截并处理了 SIGTERM 信号但未退出，则父进程将会等待直到子进程退出。
+
+如果启用了 shell 选项，则不要将未经过处理的用户输入传给此函数。 包含 shell 元字符的任何输入都可用于触发任意命令的执行。
+
+## ChildProcess 类
+`ChildProcess` 的实例代表衍生的子进程。
+
+`ChildProcess` 的实例不是直接创建的。 而是，使用 `child_process.spawn()`、`child_process.exec()`、`child_process.execFile()` 或 `child_process.fork()` 方法来创建 `ChildProcess` 的实例。
+
+##### 属性
++ `subprocess.pid`:进程的进程标识符（PID）。
++ `subprocess.channel`:对子进程的 IPC 通道的引用。 如果当前没有 IPC 通道，则此属性为 undefined。
++ `subprocess.stdio`
++ `subprocess.stderr`
++ `subprocess.stdin`
++ `subprocess.stdout`
++ `subprocess.spawnargs`
++ `subprocess.spawnfile`
++ `subprocess.signalCode`
++ `subprocess.connected`:是否可以从子进程发送和接收消息。 当 subprocess.connected 为 false 时，则不能再发送或接收消息。
++ `subprocess.killed`:子进程是否已成功接收到来着 subprocess.kill() 的信号。 killed 属性并不表明子进程是否已被终止。
++ `subprocess.exitCode`
+
+##### 方法
++ `subprocess.ref()`
+    + 调用 subprocess.unref() 之后再调用 subprocess.ref() 将会为子进程恢复已删除的引用计数，强迫父进程在退出自身之前等待子进程退出。
++ `subprocess.unref()`
++ `subprocess.channel.ref()`
++ `subprocess.channel.unref()`
++ `subprocess.disconnect()`
+    + 关闭父进程与子进程之间的 IPC 通道，一旦没有其他的连接使其保持活跃，则允许子进程正常退出。 调用该方法后，则父进程和子进程上各自的 subprocess.connected 和 process.connected 属性都会被设为 false，且进程之间不能再传递消息。
+    + 当进程中没有正被接收的消息时，就会触发 'disconnect' 事件。 这经常在调用 subprocess.disconnect() 后被立即触发。
+    + 当子进程是一个 Node.js 实例时（例如使用 child_process.fork() 衍生），也可以在子进程中调用 process.disconnect() 方法来关闭 IPC 通道。
++ `subprocess.kill([signal])`
+    + 向子进程发送一个信号。 如果没有给定参数，则进程将会发送 'SIGTERM' 信号。
+    + 如果 kill 成功，则此函数返回 true，否则返回 false。
+    + 如果信号没有被送达，则 ChildProcess 对象可能会触发 'error' 事件。 向一个已经退出的子进程发送信号不是一个错误，但可能有无法预料的后果。 具体来说，如果进程的标识符 PID 已经被重新分配给其他进程，则信号将会被发送到该进程，而这可能产生意外的结果。
+    + 虽然该函数被称为 kill，但传给子进程的信号可能实际上不会终止该进程。
+    + 在 Linux 上，子进程的子进程在试图杀死其父进程时将不会被终止。 当在 shell 中运行新进程、或使用 ChildProcess 的 shell 选项时，可能会发生这种情况
++ `subprocess.send(message[, sendHandle[, options]][, callback])`
+
+##### 事件
++ 'close' 事件
+    + 调用父进程中的 subprocess.disconnect() 或子进程中的 process.disconnect() 后会触发 'disconnect' 事件。 断开连接后就不能再发送或接收信息，且 subprocess.connected 属性为 false。
++ 'disconnect' 事件
+    + 调用父进程中的 subprocess.disconnect() 或子进程中的 process.disconnect() 后会触发 'disconnect' 事件。 断开连接后就不能再发送或接收信息，且 subprocess.connected 属性为 false。
++ 'error' 事件：
+    + 每当出现以下情况时触发 'error' 事件：
+        + 无法衍生进程；
+        + 无法杀死进程；
+        + 向子进程发送消息失败。
+
+    + 发生错误后，可能会也可能不会触发 'exit' 事件。 当同时监听 'exit' 和 'error' 事件时，则需要防止意外地多次调用处理函数。
+
++ 'exit' 事件：
+    + 当子进程结束后时会触发 'exit' 事件。 如果进程退出，则 code 是进程的最终退出码，否则为 null。 如果进程是因为收到的信号而终止，则 signal 是信号的字符串名称，否则为 null。 这两个值至少有一个是非 null 的。
+
+    + 当 'exit' 事件被触发时，子进程的 stdio 流可能依然是打开的。
+
+    + Node.js 为 SIGINT 和 SIGTERM 建立了信号处理程序，且 Node.js 进程收到这些信号不会立即终止。 相反，Node.js 将会执行一系列的清理操作，然后再重新提升处理后的信号。
++ 'message' 事件：
+    + 当子进程使用 process.send() 发送消息时会触发 'message' 事件。
+    + 消息通过序列化和解析进行传递。 收到的消息可能跟最初发送的不完全一样。
+    + 如果在衍生子进程时使用了 serialization 选项设置为 'advanced'，则 message 参数可以包含 JSON 无法表示的数据。
