@@ -80,9 +80,26 @@ LevelDB是Google开源的持久化KV单机数据库，具有很高的随机写�
 MongoDB是一个基于分布式文件存储的数据库。由C++语言编写。旨在为WEB应用提供可扩展的高性能数据存储解决方案。
 MongoDB是一个介于关系数据库和非关系数据库(nosql)之间的产品，是非关系数据库当中功能最丰富，最像关系数据库的。
 + [mongodb —— 官网](https://www.mongodb.org.cn/)
++ [mongodb —— 文档](https://docs.mongodb.com/manual/introduction/)
 + [mongodb - 教程](https://www.mongodb.org.cn/tutorial/)
 + [Mongoose 文档](http://www.mongoosejs.net/docs/index.html):为模型提供了一种直接的，基于scheme结构去定义你的数据模型。它内置数据验证， 查询构建，业务逻辑钩子等，开箱即用。
 + [Mongoose - 源码](https://github.com/mongodb/node-mongodb-native)
+
+##### 相关工具
++ mongodump:MongoDB数据备份工具
++ mongosniff:MongoDB 的抓包工具
++ mongoimport:Mongodb数据导入工具
++ mongoexport:Mongodb数据导出工具
++ bsondump:将 bson 格式的文件转储为 json 格式的数据
++ mongoperf:测试磁盘 IO 性能的工具
++ mongorestore:MongoDB数据恢复工具
++ mongod.exe:MongoDB服务启动工具
++ mongostat:mongodb自带的状态检测工具，能查看MongoDB 实时的增删改查操作的 pqs、以及内存使用、网络吞吐的信息
++ mongofiles:gridfs 的命令行客户端，用于向 MongoDB 存储、读取文件，mongofiles 支持put、get、list等接口。
++ mongooplog:可以用于2个独立的 MongoDB 实例间的数据同步，它会不断的从源实例拉取 oplog（tailable cursor），然后重放到目标实例。
++ mongotop:跟踪一个MongoDB的实例，查看哪些大量的时间花费在读取和写入数据
++ mongos:分片路由，如果使用了 sharding 功能，则应用程序连接的是 mongos 而不是 mongod
++ mongo:客户端命令行工具，其实也是一个 js 解释器，支持 js 语法
 
 
 #### 数据库链接 - sequelize
