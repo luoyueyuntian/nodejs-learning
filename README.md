@@ -7,6 +7,7 @@
 + [Buffer](./doc/node-buffer.md)
 + [Node.js 模块](./doc/nodejs模块.md)
 + [path](./doc/pathr.md)
++ [child_process](./doc/nodejs子进程.md)
 
 #### 周边相关学习
 + [npm的使用](./doc/npm使用技巧.md)
