@@ -76,9 +76,12 @@ LevelDB是Google开源的持久化KV单机数据库，具有很高的随机写�
 + [LevelDB 介绍1](https://www.jianshu.com/p/223f0c73ddc2)
 + [LevelDB 介绍2](https://blog.csdn.net/qq_26222859/article/details/79645203)
 
-#### - Mongoose
-Mongoose为模型提供了一种直接的，基于scheme结构去定义你的数据模型。它内置数据验证， 查询构建，业务逻辑钩子等，开箱即用。
-+ [Mongoose —— 文档](http://www.mongoosejs.net/)
+#### - MongoDB
+MongoDB是一个基于分布式文件存储的数据库。由C++语言编写。旨在为WEB应用提供可扩展的高性能数据存储解决方案。
+MongoDB是一个介于关系数据库和非关系数据库(nosql)之间的产品，是非关系数据库当中功能最丰富，最像关系数据库的。
++ [mongodb —— 官网](https://www.mongodb.org.cn/)
++ [mongodb - 教程](https://www.mongodb.org.cn/tutorial/)
++ [Mongoose 文档](http://www.mongoosejs.net/docs/index.html):为模型提供了一种直接的，基于scheme结构去定义你的数据模型。它内置数据验证， 查询构建，业务逻辑钩子等，开箱即用。
 + [Mongoose - 源码](https://github.com/mongodb/node-mongodb-native)
 
 
@@ -271,6 +274,7 @@ anywhere
 + chalk：一个颜色的插件，可以控制命令行中文本的颜色
 + commander：一个轻巧的nodejs模块，提供了用户命令行输入和参数解析强大功能。这个工具主要是用来实现用户在命令的交互。
 + mocha：JavaScript的一种单元测试框架，既可以在浏览器环境下运行，也可以在Node.js环境下运行。
++ serialize-json：json数据的序列化和解析
 
 ## 中间件
 + body-parser
