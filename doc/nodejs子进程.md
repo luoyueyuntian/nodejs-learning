@@ -266,25 +266,28 @@ child_process.exec() 不会替换现有的进程，且使用 shell 来执行命�
 `ChildProcess` 的实例不是直接创建的。 而是，使用 `child_process.spawn()`、`child_process.exec()`、`child_process.execFile()` 或 `child_process.fork()` 方法来创建 `ChildProcess` 的实例。
 
 ##### 属性
-+ `subprocess.pid`:进程的进程标识符（PID）。
-+ `subprocess.channel`:对子进程的 IPC 通道的引用。 如果当前没有 IPC 通道，则此属性为 undefined。
-+ `subprocess.stdio`
-+ `subprocess.stderr`
-+ `subprocess.stdin`
-+ `subprocess.stdout`
-+ `subprocess.spawnargs`
-+ `subprocess.spawnfile`
-+ `subprocess.signalCode`
-+ `subprocess.connected`:是否可以从子进程发送和接收消息。 当 subprocess.connected 为 false 时，则不能再发送或接收消息。
-+ `subprocess.killed`:子进程是否已成功接收到来着 subprocess.kill() 的信号。 killed 属性并不表明子进程是否已被终止。
-+ `subprocess.exitCode`
++ `subprocess.pid <integer>`:进程的进程标识符（PID）。
++ `subprocess.channel <Object>`:对子进程的 IPC 通道的引用。 如果当前没有 IPC 通道，则此属性为 undefined。
++ `subprocess.stdio <Array>`：一个到子进程的管道的稀疏数组，对应于传给 `child_process.spawn()` 的被设为 'pipe' 值的 stdio 选项中的位置。 `subprocess.stdio[0]`、 `subprocess.stdio[1]` 和 `subprocess.stdio[2]` 也分别可用作 `subprocess.stdin`、 `subprocess.stdout` 和 `subprocess.stderr`。
++ `subprocess.stderr <stream.Readable>`：子进程的 stderr 的可读流。
++ `subprocess.stdin <stream.Readable>`：子进程的 stdin 的可写流。
++ `subprocess.stdout <stream.Readable>`:子进程的 stdout 的可读流
++ `subprocess.spawnargs <Array>`：启动子进程时执行命名的所有参数列表
++ `subprocess.spawnfile <string>`：启动子进程时执行的文件名
++ `subprocess.signalCode <integer>`:表示子进程接受到的信号
++ `subprocess.connected <boolean>`:是否可以从子进程发送和接收消息。 当 subprocess.connected 为 false 时，则不能再发送或接收消息。
++ `subprocess.killed <boolean>`:子进程是否已成功接收到来着 subprocess.kill() 的信号。 killed 属性并不表明子进程是否已被终止。
++ `subprocess.exitCode <integer>`：子进程退出时的code，如果子进程还在运行，则该值为null
 
 ##### 方法
 + `subprocess.ref()`
     + 调用 subprocess.unref() 之后再调用 subprocess.ref() 将会为子进程恢复已删除的引用计数，强迫父进程在退出自身之前等待子进程退出。
 + `subprocess.unref()`
+    + 使父进程的事件循环引用计数中不包括子进程，允许父进程独立于子进程退出，除非子进程与父进程之间已建立了 IPC 通道。
 + `subprocess.channel.ref()`
+    + 在调用`.unref() `之前让父子进程间的IPC通道强制父进程的事件循环保持运行
 + `subprocess.channel.unref()`
+    + 让父子进程间的IPC通道不再强制父进程的事件循环保持运行，即使这个通道是打开的
 + `subprocess.disconnect()`
     + 关闭父进程与子进程之间的 IPC 通道，一旦没有其他的连接使其保持活跃，则允许子进程正常退出。 调用该方法后，则父进程和子进程上各自的 subprocess.connected 和 process.connected 属性都会被设为 false，且进程之间不能再传递消息。
     + 当进程中没有正被接收的消息时，就会触发 'disconnect' 事件。 这经常在调用 subprocess.disconnect() 后被立即触发。
@@ -307,16 +310,19 @@ child_process.exec() 不会替换现有的进程，且使用 shell 来执行命�
         + 无法衍生进程；
         + 无法杀死进程；
         + 向子进程发送消息失败。
-
     + 发生错误后，可能会也可能不会触发 'exit' 事件。 当同时监听 'exit' 和 'error' 事件时，则需要防止意外地多次调用处理函数。
 
 + 'exit' 事件：
     + 当子进程结束后时会触发 'exit' 事件。 如果进程退出，则 code 是进程的最终退出码，否则为 null。 如果进程是因为收到的信号而终止，则 signal 是信号的字符串名称，否则为 null。 这两个值至少有一个是非 null 的。
-
     + 当 'exit' 事件被触发时，子进程的 stdio 流可能依然是打开的。
-
     + Node.js 为 SIGINT 和 SIGTERM 建立了信号处理程序，且 Node.js 进程收到这些信号不会立即终止。 相反，Node.js 将会执行一系列的清理操作，然后再重新提升处理后的信号。
 + 'message' 事件：
     + 当子进程使用 process.send() 发送消息时会触发 'message' 事件。
     + 消息通过序列化和解析进行传递。 收到的消息可能跟最初发送的不完全一样。
     + 如果在衍生子进程时使用了 serialization 选项设置为 'advanced'，则 message 参数可以包含 JSON 无法表示的数据。
+
+#### maxBuffer 与 Unicode
+在启动进程的选项中有一个`option.maxBuffer`参数，指定了 stdout 或 stderr 上允许的最大字节数。 如果超过这个值，则子进程会被终止。 这会影响多字节字符编码的输出，如 UTF-8 或 UTF-16。
+
+#### shell 的要求
+在启动进程的选项中有一个`option.shell`参数，当需要启动Shell时，Shell 需要能理解 -c 开关。 如果 shell 是 'cmd.exe'，则它需要能理解 /d /s /c 开关，且命令行解析需要能兼容。
