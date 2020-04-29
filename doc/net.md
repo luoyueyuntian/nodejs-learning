@@ -115,6 +115,7 @@ net.Server 是一个 EventEmitter，实现了以下事件:
     + `writable <boolean>` 当传递了 fd 时允许写入 socket，否则忽略。默认值: false。
 + 返回: `<net.Socket>`
 
+##### 属性
 + `socket.localAddress <string>` 远程客户端连接的本地 IP 地址字符串
 + `socket.localPort <integer>` 用数字表示的本地端口
 + `socket.connecting <boolean>` `socket.connect(options[, connectListener])` 被调用到 socket 连接之间为true，连接后设置为 false 并触发 'connect' 事件
@@ -128,6 +129,8 @@ net.Socket 具有该属性时，则 socket.write() 始终可用。 这是为了�
 + `socket.remotePort <integer>` 用数字表示的远程端口
 + `socket.pending <boolean>` 如果 socket 尚未连接，则为 true，因为尚未调用 .connect() 或者因为它仍处于连接过程中
 + `socket.destroyed <boolean>` 连接是否已经被销毁，一旦连接被销毁就不能再使用它传输任何数据
+
+##### 方法
 + `socket.address()` 操作系统报告的 socket 的 address、地址的 family 名称、以及 port
 + `socket.connect()` 在给定的套接字上启动一个连接。该方法是异步的。
 
@@ -224,11 +227,23 @@ net.Socket 具有该属性时，则 socket.write() 始终可用。 这是为了�
     + `address <string>` IP 地址。
     + `family <string> | <null>` 地址类型。
     + `host <string> `主机。
-+ 'connect' 事件 当一个 socket 连接成功建立的时候触发该事件。
-+ 'ready' 事件 套接字准备好使用时触发。'connect' 后立即触发。
-+ 'timeout' 事件 当 socket 超时的时候触发。该事件只是用来通知 socket 已经闲置。用户必须手动关闭。
-+ 'data' 事件 当接收到数据的时触发该事件。data 参数是一个 Buffer 或 String。数据编码由 socket.setEncoding() 设置。当 Socket 触发 'data' 事件的时候，如果没有监听器则数据将会丢失。
-+ 'end' 事件 当 socket 的另一端发送一个 FIN 包的时候触发，从而结束 socket 的可读端。默认情况下（allowHalfOpen 为 false），socket 将发送一个 FIN 数据包，并且一旦写出它的等待写入队列就销毁它的文件描述符。 当然，如果 allowHalfOpen 为 true，socket 就不会自动结束 end() 它的写入端，允许用户写入任意数量的数据。 用户必须调用 end() 显式地结束这个连接（例如发送一个 FIN 数据包）。s
-+ 'drain' 事件 当写入缓冲区变为空时触发。可以用来做上传节流。
-+ 'close' 事件 一旦 socket 完全关闭就发出该事件。参数 had_error 是 boolean 类型，表明 socket 被关闭是否取决于传输错误。
-+ 'error' 事件 当错误发生时触发。'close' 事件也会紧接着该事件被触发。
+
+##### 事件
++ 'connect' 事件
+    + 当一个 socket 连接成功建立的时候触发该事件。
++ 'ready' 事件
+    + 套接字准备好使用时触发。'connect' 后立即触发。
++ 'timeout' 事件
+    + 当 socket 超时的时候触发。该事件只是用来通知 socket 已经闲置。用户必须手动关闭。
++ 'data' 事件
+    + 当接收到数据的时触发该事件。data 参数是一个 Buffer 或 String。数据编码由 socket.setEncoding() 设置。
+    + 当 Socket 触发 'data' 事件的时候，如果没有监听器则数据将会丢失。
++ 'end' 事件
+    + 当 socket 的另一端发送一个 FIN 包的时候触发，从而结束 socket 的可读端。
+    + 默认情况下（allowHalfOpen 为 false），socket 将发送一个 FIN 数据包，并且一旦写出它的等待写入队列就销毁它的文件描述符。 当然，如果 allowHalfOpen 为 true，socket 就不会自动结束 end() 它的写入端，允许用户写入任意数量的数据。 用户必须调用 end() 显式地结束这个连接（例如发送一个 FIN 数据包）。s
++ 'drain' 事件
+    + 当写入缓冲区变为空时触发。可以用来做上传节流。
++ 'close' 事件
+    + 一旦 socket 完全关闭就发出该事件。参数 had_error 是 boolean 类型，表明 socket 被关闭是否取决于传输错误。
++ 'error' 事件
+    + 当错误发生时触发。'close' 事件也会紧接着该事件被触发。
