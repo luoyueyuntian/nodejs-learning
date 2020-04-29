@@ -4,6 +4,7 @@
 #### api学习
 + [node操作文件模块](./doc/node-fs.md)
 + [fs](./doc/fs.md)
++ [stream](./doc/stream.md)
 + [Buffer](./doc/node-buffer.md)
 + [Node.js 模块](./doc/nodejs模块.md)
 + [path](./doc/pathr.md)
