@@ -52,6 +52,8 @@ net.Server 是一个 EventEmitter，实现了以下事件:
     + 当且仅当上次调用 server.listen() 发生错误或已经调用 server.close() 时，才能再次调用 server.listen() 方法。否则将抛出 ERR_SERVER_ALREADY_LISTEN 错误。
     + 监听时最常见的错误之一是 EADDRINUSE。 这是因为另一个服务器已正在监听请求的 port/path/handle。 处理此问题的一种方法是在一段时间后重试。
 
+    + #### `server.listen`有以下四种签名：
+
     + `server.listen(handle[, backlog][, callback])`
         + `handle <Object>`
         + `backlog <number>` server.listen() 函数的通用参数。
@@ -59,10 +61,8 @@ net.Server 是一个 EventEmitter，实现了以下事件:
         + 返回: `<net.Server>`
         + 启动一个服务器，监听已经绑定到端口、Unix 域套接字或 Windows 命名管道的给定 handle 上的连接。
         + handle 对象可以是服务器、套接字（任何具有底层 _handle 成员的东西），也可以是具有 fd 成员的对象，该成员是一个有效的文件描述符。
-        + 在 Windows 上不支持在文件描述符上进行监听。
 
-    + #### `server.listen`有以下四种签名
-    
+        + 在 Windows 上不支持在文件描述符上进行监听。
     + `server.listen(options[, callback])`
         + `options <Object>` 必须。支持以下参数属性
             + `port <number>`
