@@ -79,17 +79,67 @@ readable.readableEncoding 获取用于给定可读流的 encoding 属性。 可�
 + `readable.destroyed` 在调用 readable.destroy() 之后为 true。
 
 #### 方法
-+ `readable.setEncoding(encoding)`
++ `readable.setEncoding(encoding)` 为从可读流读取的数据设置字符编码
+    + `encoding <string>` 字符编码。
+    + 返回: `<this>`
+    + 默认情况下没有设置字符编码，流数据返回的是 Buffer 对象。 如果设置了字符编码，则流数据返回指定编码的字符串。 
+    + 可读流将会正确地处理通过流传递的多字节字符，否则如果简单地从流中作为 Buffer 对象拉出，则会被不正确地解码。
+
++ `readable.read([size])` 从内部缓冲拉取并返回数据
+    + `size <number>` 要读取的数据的字节数，size 参数必须小于或等于 1 GB
+    + 返回: `<string> | <Buffer> | <null> | <any>` 如果没有可读的数据，则返回 null。 默认情况下， readable.read() 返回的数据是 Buffer 对象，除非使用 readable.setEncoding() 指定字符编码或流处于对象模式。
+    + 如果没有指定 size 参数，则返回内部缓冲中的所有数据。
+    + 如果无法读取 size 个字节，则除非流已结束，否则将会返回 null，在这种情况下，将会返回内部 buffer 中剩余的所有数据。
+    + `readable.read()` 应该只对处于暂停模式的可读流调用。 在流动模式中， `readable.read()` 会自动调用直到内部缓冲的数据完全耗尽。<pre><code>const readable = getReadableStreamSomehow();
+readable.on('readable', () => {
+  let chunk;
+  // while 循环是必需的。 只有在 readable.read() 返回 null 之后，才会触发 'readable'
+  while (null !== (chunk = readable.read())) {
+    console.log(`接收到 ${chunk.length} 字节的数据`);
+  }
+});</code></pre>
+    + 对象模式下的可读流将会始终从调用 `readable.read(size)` 返回单个子项，而不管 size 参数的值如何。
+    + 如果 readable.read() 返回一个数据块，则 'data' 事件也会触发。
+    + 在 'end' 事件触发后再调用 stream.read([size]) 会返回 null。 不会引发运行时错误。
+
 + `readable.pipe(destination[, options])`
-+ `readable.unpipe([destination])`
-+ `readable.read([size])`
-+ `readable.unshift(chunk[, encoding])`
+    + `destination <stream.Writable>` 数据写入的目标。
+    + `options <Object>` 管道选项。
+        + `end <boolean>` 当读取器结束时终止写入器。默认值: true。
+    + 返回: `<stream.Writable>` 目标可写流，如果是 `Duplex` 流或 `Transform` 流则可以形成管道链。
+    + `readable.pipe()` 方法绑定可写流到可读流，将可读流自动切换到流动模式，并将可读流的所有数据推送到绑定的可写流。 数据流会被自动管理，所以即使可读流更快，目标可写流也不会超负荷。
+    + 可以在单个可读流上绑定多个可写流。
+    + readable.pipe() 会返回目标流的引用，可以对流进行链式地管道操作
+    + 默认情况下，当来源可读流触发 'end' 事件时，目标可写流也会调用 `stream.end()` 结束写入。 若要禁用这种默认行为， end 选项应设为 false，这样目标流就会保持打开
+    + 如果可读流在处理期间发送错误，则可写流目标不会自动关闭。 如果发生错误，则需要手动关闭每个流以防止内存泄漏。
+    + `process.stderr` 和 `process.stdout` 可写流在 Node.js 进程退出之前永远不会关闭，无论指定的选项如何。
+
++ `readable.unpipe([destination])` 解绑之前使用 stream.pipe() 方法绑定的可写流。
+    + `destination <stream.Writable>` 要移除管道的可写流。如果没有指定 destination 则解绑所有管道。如果指定了 destination, 但它没有建立管道，则不起作用。
+    + 返回: `<this>`
+
++ `readable.unshift(chunk[, encoding])` 将数据块推回内部缓冲
+    + `chunk <Buffer> | <Uint8Array> | <string> | <null> | <any>` 要推回可读队列的数据块。 对于非对象模式的流， `chunk` 必须是字符串、 `Buffer`、 `Uint8Array` 或 `null`。 对于对象模式的流， `chunk` 可以是任何 `JavaScript` 值。
+    + `encoding <string>` 字符串块的编码。 必须是有效的 `Buffer` 编码，例如 'utf8' 或 'ascii'。
+
 + `readable.wrap(stream)`
+
 + `readable[Symbol.asyncIterator]()`
-+ `readable.pause()`
-+ `readable.resume()`
-+ `readable.isPaused()`
-+ `readable.destroy([error])`
+
++ `readable.pause()` 使流动模式的流停止触发 'data' 事件，并切换出流动模式。 任何可用的数据都会保留在内部缓存中。
+    + 如果存在 'readable' 事件监听器，则 readable.pause() 方法不起作用。
+
++ `readable.resume()` 被暂停的可读流恢复触发 'data' 事件，并将流切换到流动模式。
+    + 可以用来充分消耗流中的数据，但无需实际处理任何数据
+    + 当存在 'readable' 事件监听器时， `readable.resume()` 方法不起作用。
+
++ `readable.isPaused()` 返回可读流当前的操作状态。主要用于 readable.pipe() 底层的机制。 大多数情况下无需直接使用该方法。
+
++ `readable.destroy([error])` 销毁流
+    + `error <Error>` 触发 'error' 事件，将'error' 传递给'error' 事件，并触发 'close' 事件（除非将 emitClose 设置为 false）
+    + 返回: `<this>`
+    + 此调用之后，可读流将会释放所有内部的资源，并且将会忽略对 push() 的后续调用。
+    + 一旦调用 destroy()，则不会再执行任何其他操作，并且除了 _destroy 以外的其他错误都不会作为 'error' 触发。
 
 #### 事件
 + 'close' 事件
@@ -123,26 +173,26 @@ readable.readableEncoding 获取用于给定可读流的 encoding 属性。 可�
 ### stream.Writable 类
 
 
-writable.writable
-writable.writableObjectMode
-writable.writableHighWaterMark
-writable.writableLength
-writable.writableCorked
-writable.writableEnded
-writable.writableFinished
-writable.destroyed
-writable.cork()
-writable.destroy([error])
-writable.end([chunk[, encoding]][, callback])
-writable.setDefaultEncoding(encoding)
-writable.uncork()
-writable.write(chunk[, encoding][, callback])
-'close' 事件
-'drain' 事件
-'error' 事件
-'finish' 事件
-'pipe' 事件
-'unpipe' 事件
++ `writable.writable`
++ `writable.writableObjectMode`
++ `writable.writableHighWaterMark`
++ `writable.writableLength`
++ `writable.writableCorked`
++ `writable.writableEnded`
++ `writable.writableFinished`
++ `writable.destroyed`
++ `writable.cork()`
++ `writable.destroy([error])`
++ `writable.end([chunk[, encoding]][, callback])`
++ `writable.setDefaultEncoding(encoding)`
++ `writable.uncork()`
++ `writable.write(chunk[, encoding][, callback])`
++ 'close' 事件
++ 'drain' 事件
++ 'error' 事件
++ 'finish' 事件
++ 'pipe' 事件
++ 'unpipe' 事件
 
 ## 双工流与转换流
 
