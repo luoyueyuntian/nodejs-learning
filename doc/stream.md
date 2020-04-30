@@ -77,6 +77,7 @@ readable.readableEncoding 获取用于给定可读流的 encoding 属性。 可�
 + `readable.readableEnded` 当 'end' 事件被触发时变为 true。
 + `readable.readableFlowing`
 + `readable.destroyed` 在调用 readable.destroy() 之后为 true。
++ `readable[Symbol.asyncIterator]()` 
 
 #### 方法
 + `readable.setEncoding(encoding)` 为从可读流读取的数据设置字符编码
@@ -121,10 +122,14 @@ readable.on('readable', () => {
 + `readable.unshift(chunk[, encoding])` 将数据块推回内部缓冲
     + `chunk <Buffer> | <Uint8Array> | <string> | <null> | <any>` 要推回可读队列的数据块。 对于非对象模式的流， `chunk` 必须是字符串、 `Buffer`、 `Uint8Array` 或 `null`。 对于对象模式的流， `chunk` 可以是任何 `JavaScript` 值。
     + `encoding <string>` 字符串块的编码。 必须是有效的 `Buffer` 编码，例如 'utf8' 或 'ascii'。
+    + 将 chunk 作为 null 传递信号表示流的末尾（EOF），其行为与 `readable.push(null)` 相同，之后不能再写入数据。 EOF 信号会被放在 buffer 的末尾，任何缓冲的数据仍将会被刷新。
+    + `readable.unshift()` 方法将数据块推回内部缓冲。 可用于以下情景：正被消费中的流需要将一些已经被拉出的数据重置为未消费状态，以便这些数据可以传给其他方。
+    + 触发 'end' 事件或抛出运行时错误之后，不能再调用 `stream.unshift()` 方法。
+    + 使用 `stream.unshift()` 的开发者可以考虑切换到 Transform 流。
+    + 与 `stream.push(chunk) `不同， `stream.unshift(chunk)` 不会通过重置流的内部读取状态来结束读取过程。 如果在读取期间调用 `readable.unshift()`（即从自定义的流上的 stream._read() 实现中调用），则会导致意外结果。 在使用立即的 `stream.push('')` 调用 `readable.unshift()` 之后，将适当地重置读取状态，但最好在执行读取的过程中避免调用 `readable.unshift()`。
 
 + `readable.wrap(stream)`
 
-+ `readable[Symbol.asyncIterator]()`
 
 + `readable.pause()` 使流动模式的流停止触发 'data' 事件，并切换出流动模式。 任何可用的数据都会保留在内部缓存中。
     + 如果存在 'readable' 事件监听器，则 readable.pause() 方法不起作用。
@@ -171,40 +176,90 @@ readable.on('readable', () => {
 可写流是对数据要被写入的目的地的一种抽象。所有可写流都实现了 stream.Writable 类定义的接口。
 
 ### stream.Writable 类
+#### 属性
++ `writable.writable` 如果调用 `writable.write()` 是安全的（这意味着流没有被破坏、报错、或结束），则为 true
++ `writable.writableObjectMode` 获取用于给定 Writable 流的 objectMode 属性
++ `writable.writableHighWaterMark` 返回构造可写流时传入的 highWaterMark 的值
++ `writable.writableLength` 准备写入的队列中的字节数（或对象）
++ `writable.writableCorked` 输出所有缓冲地数据需要调用`writable.uncork()`地次数
++ `writable.writableEnded` 在调用了 `writable.end()` 之后为 true。 此属性不表明数据是否已刷新，对此请使用 `writable.writableFinished`
++ `writable.writableFinished` 在触发 'finish' 事件之前立即设置为 true
++ `writable.destroyed` 在调用了 `writable.destroy()` 之后为 true。
 
+#### 方法
++ `writable.setDefaultEncoding(encoding)` 为可写流设置默认的 encoding。
 
-+ `writable.writable`
-+ `writable.writableObjectMode`
-+ `writable.writableHighWaterMark`
-+ `writable.writableLength`
-+ `writable.writableCorked`
-+ `writable.writableEnded`
-+ `writable.writableFinished`
-+ `writable.destroyed`
-+ `writable.cork()`
-+ `writable.destroy([error])`
-+ `writable.end([chunk[, encoding]][, callback])`
-+ `writable.setDefaultEncoding(encoding)`
-+ `writable.uncork()`
 + `writable.write(chunk[, encoding][, callback])`
+    + `chunk <string> | <Buffer> | <Uint8Array> | <any>` 要写入的数据。  对于非对象模式的流， chunk 必须是字符串、 Buffer 或 Uint8Array。 对于对象模式的流， chunk 可以是任何 JavaScript 值，除了 null。
+    + `encoding <string>` 如果 chunk 是字符串，则指定字符编码。对象模式下的该参数会被忽略
+    + `callback <Function>` 当数据块被输出到目标后的回调函数。
+    + 返回: `<boolean>` 如果流需要等待 'drain' 事件触发才能继续写入更多数据，则返回 false，否则返回 true。
+    + `writable.write()` 写入数据到流，并在数据被完全处理之后调用 callback。 如果发生错误，则 callback 可能被调用也可能不被调用。 为了可靠地检测错误，可以为 'error' 事件添加监听器。 callback 会在触发 'error' 之前被异步地调用。
+    + 在接收了 chunk 后，如果内部的缓冲小于创建流时配置的 highWaterMark，则返回 true 。 如果返回 false ，则应该停止向流写入数据，直到 'drain' 事件被触发。
+    + 当流还未被排空时，调用 write() 会缓冲 chunk，并返回 false。 一旦所有当前缓冲的数据块都被排空了（被操作系统接收并传输），则触发 'drain' 事件。 建议一旦 `write()` 返回 false，则不再写入任何数据块，直到 'drain' 事件被触发。 当流还未被排空时，也是可以调用 `write()`，Node.js 会缓冲所有被写入的数据块，直到达到最大内存占用，这时它会无条件中止。 甚至在它中止之前， 高内存占用将会导致垃圾回收器的性能变差和 RSS 变高（即使内存不再需要，通常也不会被释放回系统）。 如果远程的另一端没有读取数据，TCP 的 socket 可能永远也不会排空，所以写入到一个不会排空的 socket 可能会导致远程可利用的漏洞。
+    + 对于 Transform, 写入数据到一个不会排空的流尤其成问题，因为 Transform 流默认会被暂停，直到它们被 pipe 或者添加了 'data' 或 'readable' 事件句柄。
+    + 如果要被写入的数据可以根据需要生成或者取得，建议将逻辑封装为一个可读流并且使用 stream.pipe()。 如果要优先调用 write()，则可以使用 'drain' 事件来防止背压与避免内存问题
+
++ `writable.cork()` 强制把所有写入的数据都缓冲到内存中。当调用 stream.uncork() 或 stream.end() 方法时，缓冲的数据才会被输出。
+    + 主要目的是为了适应将几个数据快速连续地写入流的情况。 `writable.cork()` 不会立即将它们转发到底层的目标，而是缓冲所有数据块，直到调用 `writable.uncork()`，这会将它们全部传给 `writable._writev()`（如果存在）。 这可以防止出现行头阻塞的情况，在这种情况下，正在等待第一个数据块被处理的同时对数据进行缓冲。 但是，使用 `writable.cork()` 而不实现 `writable._writev()` 可能会对吞吐量产生不利影响
+
++ `writable.uncork()` `writable.uncork()` 方法将调用 `stream.cork()` 后缓冲的所有数据输出到目标
+    + 当使用 `writable.cork()` 和 `writable.uncork()` 来管理流的写入缓冲时，建议使用 `process.nextTick()` 来延迟调用 `writable.uncork()`。 通过这种方式，可以对单个 Node.js 事件循环中调用的所有 `writable.write()` 进行批处理。
+    + 如果一个流上多次调用 `writable.cork()`，则必须调用同样次数的 `writable.uncork()` 才能输出缓冲的数据
+
++ `writable.end([chunk[, encoding]][, callback])`
+    + `chunk <string> | <Buffer> | <Uint8Array> | <any>` 要写入的数据。 对于非对象模式的流， chunk 必须是字符串、 Buffer、或 Uint8Array。 对于对象模式的流， chunk 可以是任何 JavaScript 值，除了 null。
+    + `encoding <string>` 如果 chunk 是字符串，则指定字符编码。
+    + `callback <Function>` 当流结束或报错时的回调函数。
+    + 返回: `<this>`
+    + 调用 `writable.end()` 表明已没有数据要被写入可写流。 可选的 chunk 和 encoding 参数可以在关闭流之前再写入一块数据。 如果传入了 callback 函数，则会做为监听器添加到 'finish' 事件和 'error' 事件。
+    + 调用 `stream.end()` 之后再调用 `stream.write()` 会导致错误。
+
++ `writable.destroy([error])` 销毁流
+    + `error <Error>` 可选，触发 'error'，并且触发 'close' 事件（除非将 emitClose 设置为 false）。
+    + 返回: `<this>`
+    + 调用该方法后，可写流就结束了，之后再调用 `write()` 或 `end()` 都会导致 `ERR_STREAM_DESTROYED` 错误。 这是销毁流的最直接的方式。 前面对 write() 的调用可能没有耗尽，并且可能触发 `ERR_STREAM_DESTROYED` 错误。 如果数据在关闭之前应该刷新，则使用 end() 而不是销毁，或者在销毁流之前等待 'drain' 事件。
+    + 一旦调用 destroy()，则不会再执行任何其他操作，并且除了 _destroy 以外的其他错误都不会作为 'error' 触发。
+
+#### 事件
 + 'close' 事件
+    + 当流或其底层资源（比如文件描述符）被关闭时触发。
+    + 不会再触发其他事件，也不会再发生操作。
+    + 如果使用 emitClose 选项创建可写流，则它将会始终发出 'close' 事件。
+
 + 'drain' 事件
+    + 如果调用 `stream.write(chunk)` 返回 false，则当可以继续写入数据到流时会触发 'drain' 事件
+
 + 'error' 事件
+    + 如果在写入或管道数据时发生错误，则会触发 'error' 事件。 当调用时，监听器回调会传入一个 Error 参数。
+
 + 'finish' 事件
+    + 调用 `stream.end()` 且缓冲数据都已传给底层系统之后触发
+
 + 'pipe' 事件
+    + 参数：`src <stream.Readable>` 通过管道流入到可写流的来源流。
+    + 当在可读流上调用 stream.pipe() 方法时会发出 'pipe' 事件，并将此可写流添加到其目标集
+
 + 'unpipe' 事件
+    + 参数：`src <stream.Readable>` 要移除可写流管道的来源流
+    + 在可读流上调用 `stream.unpipe()` 方法时会发出 'unpipe'事件，从其目标集中移除此可写流
+    + 当可读流通过管道流向可写流发生错误时，也会触发此事件s
 
 ## 双工流与转换流
-
 ### stream.Duplex 类
+双工流（Duplex）是同时实现了 Readable 和 Writable 接口的流。如：`TCP socket``、zlib` 流、`crypto` 流
 
 ### stream.Transform 类
-    transform.destroy([error])
-## 实用函数
+转换流（Transform）是一种 Duplex 流，但它的输出与输入是相关联的。 与 Duplex 流一样， Transform 流也同时实现了 Readable 和 Writable 接口。如：`zlib` 流、`crypto` 流
+    + `transform.destroy([error])` 销毁流
+        + 如果传入了`error`则会触发 'error' 事件
+        + 调用该方法后，transform 流会释放全部内部资源
+        + 一旦调用 destroy()，则不会再执行任何其他操作，并且除了 _destroy 以外的其他错误都不会作为 'error' 触发。
 
-stream.finished(stream[, options], callback)
-stream.pipeline(source[, ...transforms], destination, callback)
-stream.Readable.from(iterable, [options])
+## 实用函数
+### `stream.finished(stream[, options], callback)`
+### `stream.pipeline(source[, ...transforms], destination, callback)`
+### `stream.Readable.from(iterable, [options])`
 
 
 
