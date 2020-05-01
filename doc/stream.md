@@ -251,16 +251,50 @@ readable.on('readable', () => {
 
 ### stream.Transform 类
 转换流（Transform）是一种 Duplex 流，但它的输出与输入是相关联的。 与 Duplex 流一样， Transform 流也同时实现了 Readable 和 Writable 接口。如：`zlib` 流、`crypto` 流
-    + `transform.destroy([error])` 销毁流
-        + 如果传入了`error`则会触发 'error' 事件
-        + 调用该方法后，transform 流会释放全部内部资源
-        + 一旦调用 destroy()，则不会再执行任何其他操作，并且除了 _destroy 以外的其他错误都不会作为 'error' 触发。
++ `transform.destroy([error])` 销毁流
+    + 如果传入了`error`则会触发 'error' 事件
+    + 调用该方法后，transform 流会释放全部内部资源
+    + 一旦调用 destroy()，则不会再执行任何其他操作，并且除了 _destroy 以外的其他错误都不会作为 'error' 触发。
 
 ## 实用函数
 ### `stream.finished(stream[, options], callback)`
-### `stream.pipeline(source[, ...transforms], destination, callback)`
-### `stream.Readable.from(iterable, [options])`
+当流不再可读、可写、或遇到错误、或过早关闭事件时，则该函数会获得通知
 
+在错误处理场景中特别有用，该场景中的流会被过早地销毁（例如被终止的 HTTP 请求），并且不会触发 'end' 或 'finish' 事件。
+
++ `stream <Stream>` 可读和/或可写流。
++ `options <Object>`
+    + `error <boolean>` 如果设置为 false，则对 emit('error', err) 的调用不会被视为已完成。 默认值: true。
+    + `readable <boolean>` 当设置为 false 时，即使流可能仍然可读，当流结束时也将会调用回调。默认值: true。
+    + `writable <boolean>` 当设置为 false 时，即使流可能仍然可写，当流结束时也将会调用回调。默认值: true。
++ `callback <Function>` 带有可选错误参数的回调函数。
++ 返回: `<Function>` 清理函数，它会移除所有已注册的监听器。
+
+在调用 callback 之后， stream.finished() 会留下悬挂的事件监听器（特别是 'error'、 'end'、 'finish' 和 'close'）。 这样做的原因是，意外的 'error' 事件（由于错误的流实现）不会导致意外的崩溃。 如果这是不想要的行为，则需要在回调中调用返回的清理函数
+
+### `stream.pipeline(source[, ...transforms], destination, callback)`
+使用 pipeline API 轻松地将一系列的流通过管道一起传送，并在管道完全地完成时获得通知
++ `source <Stream> | <Iterable> | <AsyncIterable> | <Function>`
+    + `Returns: <Iterable> | <AsyncIterable>`
++ `...transforms <Stream> | <Function>`
+    + `source <AsyncIterable>`
+    + `Returns: <AsyncIterable>`
++ `destination <Stream> | <Function>`
+    + `source <AsyncIterable>`
+    + `Returns: <AsyncIterable> | <Promise>`
+`callback <Function>` 当管道完全地完成时调用。
+    + `err <Error>`
+    + `val destination` 返回的 Promise 的 resolve 的值。
++ 返回: `<Stream>`
++ stream.pipeline() 将会在所有的流上调用 stream.destroy(err)，除了：
+    + 已触发 'end' 或 'close' 的 Readable 流。
+    + 已触发 'finish' 或 'close' 的 Writable 流。
++ 在调用 callback 之后， stream.pipeline() 会将悬挂的事件监听器留在流上。 在失败后重新使用流的情况下，这可能导致事件监听器泄漏和误吞的错误。
+### `stream.Readable.from(iterable, [options])` 从迭代器中创建可读流
++ `iterable <Iterable>` 实现 Symbol.asyncIterator 或 Symbol.iterator 可迭代协议的对象。
++ `options <Object>` 提供给 new stream.Readable([options]) 的选项。 默认情况下， Readable.from() 会将 options.objectMode 设置为 true，除非通过将 options.objectMode 设置为 false 显式地选择此选项。
++ 返回: `<stream.Readable>`
++ 出于性能原因，调用 `Readable.from(string)` 或 `Readable.from(buffer)` 将不会迭代字符串或 buffer 以匹配其他流的语义
 
 
 
