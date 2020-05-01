@@ -296,11 +296,31 @@ readable.on('readable', () => {
 + 返回: `<stream.Readable>`
 + 出于性能原因，调用 `Readable.from(string)` 或 `Readable.from(buffer)` 将不会迭代字符串或 buffer 以匹配其他流的语义
 
+## 使用 JavaScript 的原型继承模式来实现流
+声明一个新的 JavaScript 类，该类继承了四个基本流类之一（stream.Writeable、 stream.Readable、 stream.Duplex 或 stream.Transform），并确保调用了相应的父类构造函数:
+<pre><code>const { Writable } = require('stream');
+
+class MyWritable extends Writable {
+  constructor({ highWaterMark, ...options }) {
+    super({ highWaterMark });
+    // ...
+  }
+}</code></pre>
+当继承流时，在传入基本构造函数之前，务必清楚使用者可以且应该提供哪些选项。
+
+新的流类必须实现一个或多个特定的方法，具体取决于要创建的流的类型：
+| 用例 | 类 | 需要实现的方法 |
+| - | - | - |
+| 只读 | `Readable` | `_read()` |
+| 只写 | `Writable` | `_write()`、`_writev()`、`_final()` |
+| 双工流 | `Duplex` | `_read()`、`_write()`、`_writev()`、`_final() `|
+| 转换流 | `Transform` | `_transform()`、`_flush()`、`_final()` |
+
++ 流的实现代码应永远不要调用旨在供消费者使用的公共方法。 这样做可能会导致消费流的应用程序代码产生不利的副作用。
+
++ 避免重写诸如 `write()`、 `end()`、 `cork()`、 `uncork()`、 `read()` 和 `destroy()` 之类的公共方法，或通过 `.emit()` 触发诸如 'error'、 'data'、 'end'、 'finish' 和 'close' 之类的内部事件。 这样做会破坏当前和未来的流的不变量，从而导致与其他流、流的实用工具、以及用户期望的行为和/或兼容性问题。
 
 
+[实现流官方文档](http://nodejs.cn/api/stream.html#stream_api_for_stream_implementers)
 
-
-
-
-
-
+……具体如何实现自定义的流暂时略
