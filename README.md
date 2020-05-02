@@ -10,7 +10,7 @@
 + [path](./doc/pathr.md)
 + [child_process](./doc/nodejs子进程.md)
 + [net](./doc/net.md)
-+ [http][./doc/http.md]
++ [http](./doc/http.md)
 
 #### 周边相关学习
 + [npm的使用](./doc/npm使用技巧.md)
