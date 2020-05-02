@@ -262,31 +262,167 @@ Node.js 不会检查 `Content-Length` 和已传输的请求体的长度是否相
     + 'finish' 事件 响应发送后触发。 更具体地说，当响应头和主体的最后一段已经切换到操作系统以通过网络传输时，触发该事件。 这并不意味着客户端已收到任何信息。
 
 ## http.IncomingMessage 类
-+ message.aborted
-+ message.complete
-+ message.headers
-+ message.httpVersion
-+ message.method
-+ message.rawHeaders
-+ message.rawTrailers
-+ message.socket
-+ message.statusCode
-+ message.statusMessage
-+ message.trailers
-+ message.url
-+ message.destroy([error])
-+ message.setTimeout(msecs[, callback])
-+ 'aborted' 事件
++ #### 属性
+    + `message.url` 请求的 URL 字符串。 它仅包含实际的 HTTP 请求中存在的 URL。仅对从 `http.Server` 获取的请求有效。
+    + `message.method` 请求方法为字符串。 只读。仅对从 http.Server 获取的请求有效。
+    + `message.httpVersion` 在服务器请求情况下，表示客户端发送的 HTTP 版本。 在客户端响应的情况下，表示连接到的服务器的 HTTP 版本。 
+        + `message.httpVersionMajor` 是第一个整数
+        + `message.httpVersionMinor` 是第二个整数
+    + `message.headers` 请求或响应的消息头对象。
+        + 消息头的名称和值的键值对。 消息头的名称都是小写的。
+        + 原始消息头中的重复项会按以下方式处理，具体取决于消息头的名称
+            + 重复的 `age`、 `authorization`、 `content-length`、 `content-type`、 `etag`、 `expires`、 `from`、 `host`、 `if-modified-since`、 `if-unmodified-since`、 `last-modified`、 `location`、 `max-forwards`、 `proxy-authorization`、 `referer`、 `retry-after`、 `server` 或 `user-agent` 会被丢弃。
+            + `set-cookie` 始终是一个数组。重复项都会添加到数组中。对于重复的 cookie 消息头，其值会使用与 '; ' 连接到一起。
+            + 对于所有其他消息头，其值会使用 ', ' 连接到一起。
+    + `message.rawHeaders` 原始请求头/响应头的列表，与接收到的完全一致。
+        + 键和值位于同一列表中。 它不是元组列表。 因此，偶数偏移是键值，奇数偏移是关联的值。
+        + 消息头名称不是小写的，并且不会合并重复项。
+    + `message.trailers` 请求/响应的尾部消息头对象。 仅在 'end' 事件中填充。
+    + `message.rawTrailers` 原始的请求/响应的尾部消息头的键和值，与接收到的完全一致。 仅在 'end' 事件中填充。
+    + `message.statusCode` 3 位 HTTP 响应状态码。仅对从 `http.ClientRequest` 获取的响应有效。
+    + `message.statusMessage` HTTP 响应状态消息（原因短语）。仅对从 `http.ClientRequest` 获取的响应有效。
+    + `message.socket` 与连接关联的 net.Socket 对象
+        + 通过 HTTPS 的支持，使用 `request.socket.getPeerCertificate()` 获取客户端的身份验证详细信息。
+        + 此属性保证是 `<net.Socket>` 类（`<stream.Duplex>` 的子类）的实例，除非用户指定了 `<net.Socket>` 以外的套接字类型。
+    + `message.complete` 此属性可用于判断客户端或服务器在连接终止之前是否完全传输消息。如果已收到并成功解析完整的 HTTP 消息，则 `message.complete` 属性将为 true。
+    + `message.aborted` 如果请求已中止，则 `message.aborted` 属性为 true。
++ #### 方法
+    + `message.setTimeout(msecs[, callback])`
+        + 调用 `message.connection.setTimeout(msecs, callback)`。
+    + `message.destroy([error])` 在接收到 IncomingMessage 的套接字上调用 destroy()。如果提供了 error，则会在套接字上触发 'error' 事件，并将 error 作为参数传给该事件上的所有监听器。
++ #### 事件
+    + 'aborted' 事件 当请求中止时触发。
+    + 'close' 事件 表明底层连接已关闭。
+
++ `http.METHODS` 解析器支持的 HTTP 方法列表。
++ `http.STATUS_CODES` 所有标准 HTTP 响应状态码的集合，以及每个状态码的简短描述。
++ `http.maxHeaderSize` 只读属性，HTTP 消息头的最大允许大小（以字节为单位）。 默认为 8KB。
+    + 可使用 `--max-http-header-size` 命令行选项进行配置。
+    + 通过传入 `maxHeaderSize` 选项，可以为服务器和客户端的请求重写此值。
++ `http.globalAgent` Agent 的全局实例，作为所有 HTTP 客户端请求的默认值。
++ `http.createServer([options][, requestListener])`
+    + `options <Object>`
+        + `IncomingMessage <http.IncomingMessage>` 指定要使用的 IncomingMessage 类。用于扩展原始的 IncomingMessage。默认值: IncomingMessage。
+        + `ServerResponse <http.ServerResponse>` 指定要使用的 ServerResponse 类。用于扩展原始的 ServerResponse。默认值: ServerResponse。
+        + `insecureHTTPParser <boolean>` 使用不安全的 HTTP 解析器，当为 true 时接受无效的 HTTP 请求头。应避免使用不安全的解析器。默认值: false。
+        + `maxHeaderSize <number>` 可选地，重写此服务器接收的请求的 请求头的最大长度（以字节为单位）。 默认值: 16384（16KB）。
+    + `requestListener <Function>` 自动添加到 'request' 事件的函数
+    + 返回: `<http.Server>`
++ `http.get(options[, callback])`、`http.get(url[, options][, callback])`
+有主体的 GET 请求的便捷方法
+    + `url <string> | <URL>`
+    + `options <Object>` 接受与 `http.request()` 相同的 options，且 method 始终设置为 GET。从原型继承的属性将被忽略。
+    + `callback <Function>` callback 调用时只有一个参数，该参数是 `http.IncomingMessage` 的实例。
+    + 返回: `<http.ClientRequest>`
+    + 与 `http.request()` 的唯一区别是它将方法设置为 GET 并自动调用 `req.end()`
+    + 回调必须注意消费响应数据
++ `http.request(options[, callback])`、`http.request(url[, options][, callback])`
+    + `url <string> | <URL>`
+    + `options <Object>`
+    + `agent <http.Agent> | <boolean>` 控制 Agent 的行为。可能的值有：
+        + undefined (默认): 对此主机和端口使用 http.globalAgent。
+        + Agent 对象: 显式地使用传入的 Agent。
+        + false: 使用新建的具有默认值的 Agent。
+    + `auth <string>` 基本的身份验证，即 'user:password'，用于计算授权请求头。
+    + `createConnection <Function>` 当 agent 选项未被使用时，用来为请求生成套接字或流的函数。这可用于避免创建自定义的 Agent 类以覆盖默认的 createConnection 函数。任何双工流都是有效的返回值。
+    + `defaultPort <number>` 协议的默认端口。 如果使用 Agent，则默认值为 agent.defaultPort，否则为 undefined。
+    + `family <number>` 当解析 host 或 hostname 时使用的 IP 地址族。有效值为 4 或 6。如果没有指定，则同时使用 IP v4 和 v6。
+    + `headers <Object>` 包含请求头的对象。
+    + `host <string>` 请求发送至的服务器的域名或 IP 地址。默认值: 'localhost'。
+    + `hostname <string>` host 的别名。为了支持 `url.parse()`，如果同时指定 host 和 hostname，则使用 hostname。
+    + `insecureHTTPParser <boolean>` 使用不安全的 HTTP 解析器，当为 true 时接受无效的 HTTP 请求头。应避免使用不安全的解析器。默认值: false。
+    + `localAddress <string>` 为网络连接绑定的本地接口。
+    + `lookup <Function>` 自定义的查找函数。 默认值: `dns.lookup()`。
+    + `maxHeaderSize <number>` 可选地，重写此服务器接收的请求的 `--max-http-header-size` 值，即请求头的最大长度（以字节为单位）。 默认值: 16384（16KB）。
+    + `method <string>` 一个字符串，指定 HTTP 请求的方法。默认值: 'GET'。
+    + `path <string>` 请求的路径。应包括查询字符串（如果有）。当请求的路径包含非法的字符时，则抛出异常。目前只有空格被拒绝，但未来可能会有所变化。默认值: '/'。
+    + `port <number>` 远程服务器的端口。默认值: defaultPort（如果有设置）或 80。
+    + `protocol <string>` 使用的协议。默认值: 'http:'。
+    + `setHost <boolean>`: 指定是否自动添加 Host 请求头。默认值: true。
+    + `socketPath <string>` Unix 域套接字。如果指定了 host 或 port 之一（它们指定了 TCP 套接字），则不能使用此选项。
+    + `timeout <number>`: 指定套接字超时的数值，以毫秒为单位。这会在套接字被连接之前设置超时。
+    + `callback <Function>` 作为单次监听器被添加到 'response' 事件。
+    + 返回: `<http.ClientRequest>`
+
+url 可以是字符串或 URL 对象。 如果 url 是一个字符串，则会自动使用 [url.URL()] 解析它。 如果它是一个 URL 对象，则会自动转换为普通的 options 对象。
+
+如果同时指定了 url 和 options，则对象会被合并，其中 options 属性优先。
+
+ 使用 `http.request()` 时，必须始终调用 `req.end()` 来表示请求的结束，即使没有数据被写入请求主体。
+
+如果在请求期间遇到任何错误（DNS 解析错误、TCP 层的错误、或实际的 HTTP 解析错误），则会在返回的请求对象上触发 'error' 事件。 与所有 'error' 事件一样，如果没有注册监听器，则会抛出错误。
+
+#### 需要注意的一些特殊的请求头:
++ 发送 'Connection: keep-alive' 会通知 Node.js 与服务器的连接应该持续到下一个请求。
++ 发送 'Content-Length' 请求头会禁用默认的分块编码。
++ 发送 'Expect' 请求头会立即发送请求头。通常情况下，当发送 'Expect: 100-continue' 时，应设置超时时间和 'continue' 事件的监听器。详见 RFC 2616 的第 8.2.3 节。
++ 发送授权请求头会使用 auth 选项覆盖以计算基本的身份验证。
+
+#### 在成功的请求中，会按以下顺序触发以下事件：
++ 'socket' 事件
++ 'response' 事件
+    + res 对象上任意次数的 'data' 事件（如果响应主体为空，则根本不会触发 'data' 事件，例如在大多数重定向中）
+    + res 对象上的 'end' 事件
 + 'close' 事件
 
-+ http.METHODS
-+ http.STATUS_CODES
-+ http.createServer([options][, requestListener])
-+ http.get(options[, callback])
-+ http.get(url[, options][, callback])
-+ http.globalAgent
-+ http.maxHeaderSize
-+ http.request(options[, callback])
-+ http.request(url[, options][, callback])
+#### 如果出现连接错误，则触发以下事件：
++ 'socket' 事件
++ 'error' 事件
++ 'close' 事件
 
+#### 如果收到响应之前过早关闭连接，则按以下顺序触发以下事件：
++ 'socket' 事件
++ 'error' 事件并带上错误信 'Error: socket hang up' 和错误码 'ECONNRESET'
++ 'close' 事件
 
+#### 如果收到响应之后过早关闭连接，则按以下顺序触发以下事件：
++ 'socket' 事件
++ 'response' 事件
+    + res 对象上任意次数的 'data' 事件
++ （此处连接已关闭）
++ res 对象上的 'aborted' 事件
++ 'close'
++ res 对象上的 'close' 事件
+
+#### 在分配socket 前调用`req.destroy()`，则按以下顺序触发以下事件：
++ (此处调用`req.destroy()`)
++ 'error' 事件并带上错误信  'Error: socket hang up' 和错误码 'ECONNRESET'
++ 'close' 事件
+
+####  连接成功前调用`req.destroy()`，则按以下顺序触发以下事件：
++ 'socket' 事件
++ (此处调用`req.destroy()`)
++ 'error' 事件并带上错误信  'Error: socket hang up' 和错误码 'ECONNRESET'
++ 'close' 事件
+
+#### 在接收到响应前调用`req.destroy()`，则按以下顺序触发以下事件：
++ 'socket' 事件
++ 'response' 事件
+    + res 对象上任意次数的 'data' 事件
++ (此处调用`req.destroy()`)
++ res 对象上的 'aborted' 事件
++ 'close' 事件
++ res 对象上的 'close' 事件
+
+#### 在分配socket 前调用`req.abort()`，则按以下顺序触发以下事件：
++ (此处调用`req.abort()`)
++ 'abort' 事件
++ 'close' 事件
+
+#### 如果在连接成功之前调用 req.abort()，则按以下顺序触发以下事件：
++ 'socket' 事件
++ (在这里调用 req.abort())
++ 'abort' 事件
++ 'error' 事件并带上错误信息 'Error: socket hang up' 和错误码 'ECONNRESET'
++ 'close' 事件
+
+#### 如果在响应被接收之后调用 req.abort()，则按以下顺序触发以下事件：
++ 'socket' 事件
++ 'response' 事件
+    + res 对象上任意次数的 'data' 事件
++ (在这里调用 req.abort())
++ 'abort' 事件
++ res 对象上的 'aborted' 事件
++ 'close' 事件
++ res 对象上的 'end' 事件
++ res 对象上的 'close' 事件
