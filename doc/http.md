@@ -3,8 +3,6 @@
 
 HTTP API 都非常底层。 它仅进行流处理和消息解析。 它将消息解析为消息头和消息主体，但不会解析具体的消息头或消息主体。
 
-
-
 ## http.Agent 类
 Agent 负责管理 HTTP 客户端的连接持久性和重用。 它为给定的主机和端口维护一个待处理请求队列，为每个请求重用单独的套接字连接，直到队列为空，此时套接字被销毁或放入连接池，以便再次用于请求到同一个主机和端口。 销毁还是放入连接池取决于 keepAlive 选项。
 
@@ -83,10 +81,10 @@ Node.js 不会检查 `Content-Length` 和已传输的请求体的长度是否相
 + #### 属性
     + `request.destroyed` 在调用了 `request.destroy()` 之后为 true。
     + `request.path` 请求的路径。
-    + `request.reusedSocket`
-    + `request.socket`
-    + `request.writableEnded`
-    + `request.writableFinished`
+    + `request.reusedSocket` 请求是否是通过一个重用的socket发送。当请求是通过开启`keep-alive`发送时，在底层，这个socket会被复用。如果服务端关闭了连接，客户端可能会触发'ECONNRESET'异常
+    + `request.socket` 指向底层套接字。也可以通过 request.connection 访问 socket。
+    + `request.writableEnded` 在调用 `request.end()` 之后为 true。 此属性不表明是否已刷新数据，对于这种应该使用 `request.writableFinished`。
+    + `request.writableFinished` 如果在触发 'finish' 事件之前，所有数据都已刷新到底层系统，则为 true。
     + `request.aborted` 如果请求已中止，则 request.aborted 属性将会为 true。
     + `request.maxHeadersCount` 限制最大响应头数。 如果设置为 0，则不会应用任何限制。
 
@@ -104,11 +102,17 @@ Node.js 不会检查 `Content-Length` 和已传输的请求体的长度是否相
         + Node.js 通常会缓冲请求头，直到调用 `request.end()` 或写入第一个请求数据块。 然后，它尝试将请求头和数据打包到单个 TCP 数据包中。这通常是期望的（它节省了 TCP 往返），但是可能很晚才发送第一个数据。 `request.flushHeaders()` 绕过优化并启动请求。
     + `request.getHeader(name)` 读取请求中的一个请求头。 该名称不区分大小写。 返回值的类型取决于提供给 `request.setHeader()` 的参数。
     + `request.removeHeader(name)` 移除已定义到请求头对象中的请求头。
-    + `request.setHeader(name, value)`
-    + `request.setNoDelay([noDelay])`
-    + `request.setSocketKeepAlive([enable][, initialDelay])`
-    + `request.setTimeout(timeout[, callback])`
-    + `request.write(chunk[, encoding][, callback])`
+    + `request.setHeader(name, value)` 为请求头对象设置单个请求头的值。如果此请求头已存在于待发送的请求头中，则其值将被替换。 这里可以使用字符串数组来发送具有相同名称的多个请求头。 非字符串值将被原样保存。 因此 `request.getHeader()` 可能会返回非字符串值。 但是非字符串值将转换为字符串以进行网络传输。
+    + `request.setNoDelay([noDelay])` 一旦将套接字分配给此请求并且连接了套接字，就会调用 `socket.setNoDelay()`。
+    + `request.setSocketKeepAlive([enable][, initialDelay])` 一旦将套接字分配给此请求并连接了套接字，就会调用 `socket.setKeepAlive()`。
+    + `request.setTimeout(timeout[, callback])` 一旦将套接字分配给此请求并且连接了套接字，就会调用 `socket.setTimeout()`。
+    + `request.write(chunk[, encoding][, callback])` 发送一个请求主体的数据块。通过多次调用此方法，可以将请求主体发送到服务器。 在这种情况下，建议在创建请求时使用 `['Transfer-Encoding', 'chunked']` 请求头行。s
+        + `chunk <string> | <Buffer>`
+        + `encoding <string>` 可选，仅当 chunk 是字符串时才适用。 默认为 'utf8'。
+        + `callback <Function>` 可选，当刷新此数据块时调用，但仅当数据块非空时才会调用。
+        + 返回: `<boolean>` 如果将整个数据成功刷新到内核缓冲区，则返回 true。 如果全部或部分数据在用户内存中排队，则返回 false。
+        + 当缓冲区再次空闲时，则触发 'drain' 事件。
+        + 当使用空字符串或 buffer 调用 write 函数时，则什么也不做且等待更多输入。
 
 + #### 事件
     + 'abort' 事件 当请求被客户端中止时触发。 此事件仅在第一次调用 abort() 时触发。
@@ -139,58 +143,123 @@ Node.js 不会检查 `Content-Length` 和已传输的请求体的长度是否相
 
 ## http.Server 类
 + #### 属性
-    + server.headersTimeout
-    + server.listening
-    + server.maxHeadersCount
-    + server.timeout
-    + server.keepAliveTimeout
+    + `server.listening` 服务器是否正在监听连接
+    + `server.maxHeadersCount` 限制最大传入请求头数。 如果设置为 0，则不会应用任何限制。
+    + `server.headersTimeout` 限制解析器等待接收完整 HTTP 请求头的时间。
+        + 如果不活动，则适用 `server.timeout` 中定义的规则。 但是，如果请求头发送速度非常慢（默认情况下，每 2 分钟最多一个字节），那么基于不活动的超时仍然允许连接保持打开状态。 为了防止这种情况，每当请求头数据到达时，进行额外的检查，自建立连接以来，没有超过 `server.headersTimeout` 毫秒。 如果检查失败，则在服务器对象上触发 'timeout' 事件，并且销毁套接字（默认情况下）。
+    + `server.keepAliveTimeout` 服务器在完成写入最后一个响应之后，在销毁套接字之前需要等待其他传入数据的非活动毫秒数。 如果服务器在保持活动超时被触发之前接收到新数据，它将重置常规非活动超时，即 `server.timeout`。
+        + 值为 0 将禁用传入连接上的保持活动超时行为。 值为 0 使得 http 服务器的行为与 8.0.0 之前的 Node.js 版本类似，后者没有保持活动超时。
+        + 套接字超时逻辑在连接时设置，因此更改此值仅影响到服务器的新连接，而不影响任何现有连接。
+    + `server.timeout` 认定套接字超时的不活动毫秒数。
+        + `<number>` 超时时间（以毫秒为单位）。默认值: 120000（2 分钟）。
+        + 值为 0 将禁用传入连接的超时行为。
+        + 套接字超时逻辑在连接时设置，因此更改此值仅影响到服务器的新连接，而不影响任何现有连接。
 
 + #### 方法
-+ server.close([callback])
-+ server.listen()
-+ server.setTimeout([msecs][, callback])
+    + `server.listen()` 启动 HTTP 服务器监听连接。 此方法与 `net.Server `中的 `server.listen()` 相同。
+    + `server.setTimeout([msecs][, callback])` 设置套接字的超时值，并在服务器对象上触发 'timeout' 事件，如果发生超时，则将套接字作为参数传入。
+        + `msecs <number>` 默认值: 120000（2 分钟）。
+        + `callback <Function>`
+        + 返回: `<http.Server>`
+        + 如果服务器对象上有 'timeout' 事件监听器，则将使用超时的套接字作为参数调用它。
+        + 默认情况下，服务器不会使 socket 超时。 但是，如果将回调分配给服务器的 'timeout' 事件，则必须显式处理超时。
+    + `server.close([callback])` 停止服务器接受新连接
 
 + #### 事件
-    + 'checkContinue' 事件
-    + 'checkExpectation' 事件
-    + 'clientError' 事件
-    + 'close' 事件
-    + 'connect' 事件
-    + 'connection' 事件
-    + 'request' 事件
-    + 'upgrade' 事件
+    + 'connection' 事件 建立新的 TCP 流时会触发此事件
+        + socket 通常是 net.Socket 类型的对象。 通常用户无需访问此事件。 特别是，由于协议解析器附加到套接字的方式，套接字将不会触发 'readable' 事件。 也可以通过 request.connection 访问 socket。
+        + 用户也可以显式触发此事件，以将连接注入 HTTP 服务器。 在这种情况下，可以传入任何 Duplex 流。
+        + 如果在此处调用 `socket.setTimeout()`，则当套接字已提供请求时（如果 server.keepAliveTimeout 为非零），超时将会被 server.keepAliveTimeout 替换。
+        + 此事件保证传入 `<net.Socket>` 类（`<stream.Duplex>` 的子类）的实例，除非用户指定了 `<net.Socket>` 以外的套接字类型。
+    + 'connect' 事件  每次客户端请求 HTTP CONNECT 方法时触发。 如果未监听此事件，则请求 CONNECT 方法的客户端将关闭其连接。
+        + 此事件保证传入 `<net.Socket>` 类（`<stream.Duplex> `的子类）的实例，除非用户指定了 · 以外的套接字类型。
+        + 触发此事件后，请求的套接字将没有 'data' 事件监听器，这意味着它需要绑定才能处理发送到该套接字上的服务器的数据。
+    + 'upgrade' 事件 每次客户端请求 HTTP 升级时发出。 监听此事件是可选的，客户端无法坚持更改协议。
+        + `request <http.IncomingMessage>` HTTP 请求的参数，与 'request' 事件中的一样。
+        + `socket <stream.Duplex>` 服务器与客户端之间的网络套接字。
+        + `head <Buffer>` 升级后的流的第一个数据包（可能为空）。
+        + 触发此事件后，请求的套接字将没有 'data' 事件监听器，这意味着它需要绑定才能处理发送到该套接字上的服务器的数据。
+        + 此事件保证传入 `<net.Socket>` 类（`<stream.Duplex>` 的子类）的实例，除非用户指定了 `<net.Socket>` 以外的套接字类型。
+    + 'request' 事件 每次有请求时都会触发。 每个连接可能有多个请求（在 `HTTP Keep-Alive` 连接的情况下）。
+    + 'checkContinue' 事件 每次收到 `HTTP Expect: 100-continue` 的请求时都会触发。 如果未监听此事件，服务器将自动响应 100 Continue。
+        + 处理此事件时，如果客户端应继续发送请求主体，则调用 `response.writeContinue()`，如果客户端不应继续发送请求主体，则生成适当的 HTTP 响应（例如 400 Bad Request）。
+        + 在触发和处理此事件时，不会触发 'request' 事件。
+    + 'checkExpectation' 事件 每次收到带有 HTTP Expect 请求头的请求时触发，其中值不是 `100-continue`。 如果未监听此事件，则服务器将根据需要自动响应 417 Expectation Failed。
+        + 在触发和处理此事件时，不会触发 'request' 事件。
+    + 'clientError' 事件 如果客户端连接触发 'error' 事件，则会在此处转发。
+        + `exception <Error>`
+        + `socket <stream.Duplex>` 发生错误的 `net.Socket` 对象
+        +  此事件的监听器负责关闭或销毁底层套接字。
+        + 此事件保证传入 `<net.Socket>` 类（`<stream.Duplex>` 的子类）的实例，除非用户指定了 `<net.Socket>` 以外的套接字类型。
+        + 默认行为是尝试使用 `HTTP 400 Bad Request `关闭套接字、或者在 `HPE_HEADER_OVERFLOW` 错误的情况下尝试关闭 `HTTP 431 Request Header Fields Too Large`。 如果套接字不可写，则会被立即销毁。
+    + 'close' 事件 每次客户端请求 HTTP
 
 ## http.ServerResponse 类
 + #### 属性
-    + response.sendDate
-    + response.socket
-    + response.statusCode
-    + response.statusMessage
-    + response.writableEnded
-    + response.writableFinished
-    + response.headersSent
+    + `response.socket` 指向底层的套接字。 通常用户不需要访问此属性。 特别是，由于协议解析器附加到套接字的方式，套接字将不会触发 'readable' 事件。 在调用 `response.end()` 之后，此属性将为空。 也可以通过 `response.connection` 访问 socket。
+    + `response.statusCode` 当使用隐式的响应头时（没有显式地调用 `response.writeHead()`），此属性控制在刷新响应头时将发送到客户端的状态码。响应头发送到客户端后，此属性表示已发送的状态码。
+    + `response.statusMessage` 当使用隐式的响应头时（没有显式地调用 `response.writeHead()`），此属性控制在刷新响应头时将发送到客户端的状态消息。 如果保留为 `undefined`，则将使用状态码的标准消息。响应头发送到客户端后，此属性表示已发送的状态消息。
+    + `response.writableEnded` 在调用 `response.end()` 之后为 true。 此属性不表明数据是否已刷新，对于这种应该使用 `response.writableFinished`。
+    + `response.writableFinished` 如果在触发 'finish' 事件之前，所有数据都已刷新到底层的系统，则为 true。
+    + `response.headersSent`  如果已发送响应头，则为 true，否则为 false。
+    + `response.sendDate` 如果为 true，则 Date 响应头将自动生成并在响应中发送（如果响应头中尚不存在）。 默认为 true。这应该仅在测试时才禁用，HTTP 响应需要 Date 响应头。
 
 + #### 方法
-    + response.addTrailers(headers)
-    + response.cork()
-    + response.end([data[, encoding]][, callback])
-    + response.flushHeaders()
-    + response.getHeader(name)
-    + response.getHeaderNames()
-    + response.getHeaders()
-    + response.hasHeader(name)
-    + response.removeHeader(name)
-    + response.setHeader(name, value)
-    + response.setTimeout(msecs[, callback])
-    + response.uncork()
-    + response.write(chunk[, encoding][, callback])
-    + response.writeContinue()
-    + response.writeHead(statusCode[, statusMessage][, headers])
-    + response.writeProcessing()
+    + `response.hasHeader(name)` 如果当前在传出的响应头中设置了由 name 标识的响应头，则返回 true。 响应头名称匹配不区分大小写。
+    + `response.getHeader(name)` 读出已排队但未发送到客户端的响应头。 该名称不区分大小写。 返回值的类型取决于提供给 `response.setHeader()` 的参数。
+    + `response.getHeaderNames()` 返回一个数组，其中包含当前传出的响应头的唯一名称。 所有响应头名称都是小写的。
+    + `response.getHeaders()` 返回当前传出的响应头的浅拷贝。 由于使用浅拷贝，因此可以更改数组的值而无需额外调用各种与响应头相关的 http 模块方法。 返回对象的键是响应头名称，值是各自的响应头值。 所有响应头名称都是小写的。
+        + `response.getHeaders()` 方法返回的对象不是从 JavaScript Object 原型继承的。 这意味着典型的 Object 方法，如 `obj.toString()`、 `obj.hasOwnProperty()` 等都没有定义并且不起作用。
+    + `response.setHeader(name, value)` 为隐式响应头设置单个响应头的值。 如果此响应头已存在于待发送的响应头中，则其值将被替换。 在这里可以使用字符串数组来发送具有相同名称的多个响应头。 非字符串值将被原样保存。 因此 `response.getHeader()` 可能返回非字符串值。 但是非字符串值将转换为字符串以进行网络传输。
+        + 尝试设置包含无效字符的响应头字段名称或值将导致抛出 `TypeError`。
+        + 当使用 `response.setHeader()` 设置响应头时，它们将与传给 `response.writeHead()` 的任何响应头合并，其中 `response.writeHead()` 的响应头优先。
+        + 如果调用了 `response.writeHead()` 方法并且尚未调用此方法，则它将直接将提供的响应头值写入网络通道而不在内部进行缓存，并且响应头上的 `response.getHeader()` 将不会产生预期的结果。 如果需要渐进的响应头填充以及将来可能的检索和修改，则使用 response.setHeader() 而不是 `response.writeHead()`。
+    + `response.addTrailers(headers)` 将 HTTP 尾部响应头（一种在消息末尾的响应头）添加到响应中。
+        + 只有在使用分块编码进行响应时才会发出尾部响应头; 如果不是（例如，如果请求是 HTTP/1.0），它们将被静默丢弃。
+        + HTTP 需要发送 Trailer 响应头才能发出尾部响应头，并在其值中包含响应头字段列表。
+        + 尝试设置包含无效字符的响应头字段名称或值将导致抛出 TypeError。
+    + `response.removeHeader(name)` 移除排队等待中的隐式发送的响应头。
+    + `response.flushHeaders()` 刷新响应头
+    + `response.setTimeout(msecs[, callback])` 将套接字的超时值设置为 msecs。 如果提供了回调，则会将其作为监听器添加到响应对象上的 'timeout' 事件中。
+        + 如果没有 'timeout' 监听器添加到请求、响应、或服务器，则套接字在超时时将被销毁。 如果有回调处理函数分配给请求、响应、或服务器的 'timeout' 事件，则必须显式处理超时的套接字。
+    + `response.writeHead(statusCode[, statusMessage][, headers])` 向请求发送响应头。
+        + `statusCode <number>` 一个 3 位的 HTTP 状态码
+        + `statusMessage <string>`
+        + `headers <Object>` 响应头
+        + 返回: `<http.ServerResponse>` 返回对 ServerResponse 的引用，以便可以链式调用。
+        + 此方法只能在消息上调用一次，并且必须在调用 `response.end()` 之前调用。
+        + 如果在调用此方法之前调用了 `response.write()` 或 `response.end()`，则将计算隐式或可变的响应头并调用此函数。
+        + 当使用 `response.setHeader()` 设置响应头时，则与传给 `response.writeHead()` 的任何响应头合并，且 `response.writeHead()` 的优先。
+        + 如果调用此方法并且尚未调用 `response.setHeader()`，则直接将提供的响应头值写入网络通道而不在内部进行缓存，响应头上的 `response.getHeader()` 将不会产生预期的结果。 如果需要渐进的响应头填充以及将来可能的检索和修改，则改用 `response.setHeader()`。
+        + `Content-Length` 以字节而非字符为单位。 使用 `Buffer.byteLength()` 来判断主体的长度（以字节为单位）。 Node.js 不检查 `Content-Length` 和已传输的主体的长度是否相等。
+        + 尝试设置包含无效字符的响应头字段名称或值将导致抛出 `TypeError`。
+    + `response.write(chunk[, encoding][, callback])`
+        + `chunk <string> | <Buffer>`
+        + `encoding <string>` 默认值: 'utf8'。
+        + `callback <Function>`
+        + 返回: `<boolean>`
+        + 如果调用此方法并且尚未调用 `response.writeHead()`，则将切换到隐式响应头模式并刷新隐式响应头。
+        + 这会发送一块响应主体。 可以多次调用该方法以提供连续的响应主体片段。
+        + 在 http 模块中，当请求是 HEAD 请求时，则省略响应主体。 同样地， 204 和 304 响应不得包含消息主体。
+        + chunk 可以是字符串或 buffer。 如果 chunk 是一个字符串，则第二个参数指定如何将其编码为字节流。 当刷新此数据块时将调用 callback。
+        + 这是原始的HTTP正文，与可能使用的高级多部分正文编码无关。
+        + 第一次调用 response.write() 时，它会将缓冲的响应头信息和主体的第一个数据块发送给客户端。 第二次调用 response.write() 时，Node.js 假定数据将被流式传输，并单独发送新数据。 也就是说，响应被缓冲到主体的第一个数据块。
+        + 如果将整个数据成功刷新到内核缓冲区，则返回 true。 如果全部或部分数据在用户内存中排队，则返回 false。 当缓冲区再次空闲时，则触发 'drain' 事件。
+    + `response.writeContinue()` 向客户端发送 HTTP/1.1 100 Continue 消息，表示应发送请求主体。
+    + `response.writeProcessing()` 向客户端发送 `HTTP/1.1 102` 处理消息，表明可以发送请求主体。
+    + `response.cork()` 强制把所有写入的数据都缓冲到内存中
+    + `response.uncork()` 将调用 `response.cork()` 后缓冲的所有数据输出到目标。
+    + `response.end([data[, encoding]][, callback])` 此方法向服务器发出信号，表明已发送所有响应头和主体，该服务器应该视为此消息已完成。 必须在每个响应上调用此 `response.end()` 方法。
+        + `data <string> | <Buffer>`
+        + `encoding <string>`
+        + `callback <Function>`
+        + 返回: `<this>`
+        + 如果指定了 data，则相当于调用 `response.write(data, encoding)` 之后再调用 `response.end(callback)`。
+        + 如果指定了 callback，则当响应流完成时将调用它。
 
 + #### 事件
-    + 'close' 事件
-    + 'finish' 事件
+    + 'close' 事件 表明底层的连接已被终止
+    + 'finish' 事件 响应发送后触发。 更具体地说，当响应头和主体的最后一段已经切换到操作系统以通过网络传输时，触发该事件。 这并不意味着客户端已收到任何信息。
 
 ## http.IncomingMessage 类
 + message.aborted
