@@ -2,14 +2,15 @@
 + [对node的理解](./doc/nodejs与js的关系.md)
 
 #### api学习
-+ [node操作文件模块](./doc/node-fs.md)
-+ [fs](./doc/fs.md)
-+ [stream](./doc/stream.md)
-+ [Buffer](./doc/node-buffer.md)
 + [Node.js 模块](./doc/nodejs模块.md)
++ [Buffer](./doc/node-buffer.md)
++ [stream](./doc/stream.md)
++ [node操作文件模块](./doc/node-fs.md)
 + [path](./doc/pathr.md)
++ [fs](./doc/fs.md)
 + [process](./doc/process.md)
 + [child_process](./doc/nodejs子进程.md)
++ [worker_threads](./doc/worker_threads.md)
 + [net](./doc/net.md)
 + [http](./doc/http.md)
 
