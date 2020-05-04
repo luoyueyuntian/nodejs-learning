@@ -1,5 +1,5 @@
 ## 学习nodeJs
-+ [对node的理解](./doc/nodejs与js的关系.md)
++ [nodejs学习指南](./doc/nodejs学习指南.md)
 
 #### api学习
 + [Node.js 模块](./doc/nodejs模块.md)
