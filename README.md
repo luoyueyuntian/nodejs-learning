@@ -19,6 +19,7 @@
 + [npm私服搭建](./doc/npm私服搭建.md)
 
 #### 调试nodejs
++ [使用Chrome DevTools调试Nodejs](./doc/调试nodejs代码.md)
 
 #### 流行的开发工具
 + [常用nodejs三方包](./doc/常用nodejs.md)
