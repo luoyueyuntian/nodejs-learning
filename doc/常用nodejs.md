@@ -352,5 +352,8 @@ serve-favicon是Node.js中间件，用于服务图标。
 + koa-jwt
 用于校验 JSON Web Tokens (JWT) koa中间件
 
++ path-to-regexp
+解析路径的模块，由于路由匹配
+
 
 更多中间件可参看[Nodejs基础中间件Connect](https://www.cnblogs.com/chris-oil/p/5625437.html)
