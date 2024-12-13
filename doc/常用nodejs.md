@@ -4,9 +4,13 @@ Express 是一个保持最小规模的灵活的 Node.js Web 应用程序开发�
 + [Express —— 官方文档](http://www.expressjs.com.cn/)
 + [github地址](https://github.com/expressjs/express)
 
+风格类似的框架还有：Connect、Express、Restify
+
 #### koa
 Koa 是一个新的 web 框架，由 Express 幕后的原班人马打造， 致力于成为 web 应用和 API 开发领域中的一个更小、更富有表现力、更健壮的基石。 通过利用 async 函数，Koa 帮你丢弃回调函数，并有力地增强错误处理。 Koa 并没有捆绑任何中间件， 而是提供了一套优雅的方法，帮助您快速而愉快地编写服务端应用程序。
 + [Koa —— 官方文档](https://koa.bootcss.com/)
+
+类似的还有Daruk、ThiksJs、Egg.js、MIdway。其中Daruk是最“中立”的Typescript框架，不大不小，刚刚好，支持KOA，支持IoC。
 
 #### egg
 Egg.js，为企业级框架和应用而生，是阿里开源的企业级 Node.js 框架
@@ -44,11 +48,22 @@ restify提供了DTrace功能，为程序调式带来新的便利！
 #### Meteor.JS
 NodeJS 的全栈框架，允许用户构建实时应用程序。用于创建基于移动和基于 Web 的 javascript 应用。
 
-#### Loopback
+#### Loopback/MEAN.js/Blitz.js
+全栈整合型框架。
 基于Express 的web架构、提供一套ORM解决方案、结合Express提供便捷的RESTFul接入
 
 #### NestJS
 NestJS 框架-一种渐进式的 NodeJS 框架，用于构建高效、可靠和可扩展的服务器端应用程序
+
+### Next.js/ykfe/ssr
+服务端渲染框架。next.js经过调整后不再只是服务端渲染框架，而是一个通用的基于React的框架
+
+### Redwood
+基于JAMStack理念架构的框架
+
+### strapi
+Nodejs版的Headless CMS，关注的是数据到API的标准化过程，没有传统CMS系统中的view层，是一个干干净净的数据和API管理框架
+
 
 
 ## 数据库相关
@@ -213,6 +228,12 @@ Slate可帮助您创建美观，智能，响应迅速的API文档。
 
 + forever
 部署
+
++ supervisior
+监控进程并重启服务
+
++ node-dev
+监控进程并重启服务
 
 + serve-favicon
 带重启(nodemon用于开发环境)，日志，负载均衡
