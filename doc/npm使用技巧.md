@@ -96,3 +96,10 @@ Package.json 属性说明
 安装完成后可以使用 cnpm 命令来安装模块了：
 <pre><code>cnpm install &lt;package&gt;</code></pre>
 
+## npm钩子
++ prepublish：在模块发布前执行
++ postpublish：在模块发布后执行
++ preinstall：在模块安装前执行
++ postinstall：在模块安装后运行
+
+
