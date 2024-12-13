@@ -91,3 +91,19 @@ POSIX 上路径结构如下：
 
 #### 路径对象转路径字符串
 <pre><code>path.format(pathObject)</code></pre>
+
+
+## 当前文件和目录所在位置
+__dirname表示当前文件所在的位置，在一模块中，它属于“全局”变量，dirname表示行代码所在路径。
+<pre><code>(function(exports, require, moudules, __filename, __dirname){})()</code></pre>
+要获取安装后的文件目录，这个是最好的方式。
+
+## 当前终端执行路径
+获取当前终端执行路径时，可以使用process.cwd方法
+
+## 当前系统用户主目录
+获取当前系统用户主目录的方案很简单，主要是通过环境变量进行判断，代码如下：
+<pre><code>function home() {
+  return process.env.HOME || process.env.HOMEPATH || process.env.USERPROFILE;
+}</code></pre>
+还可以使用 os-homedir 这样的Nodejs模块，该模块兼容所有操作系统。
