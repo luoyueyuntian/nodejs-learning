@@ -313,6 +313,16 @@ anywhere
 + commander：一个轻巧的nodejs模块，提供了用户命令行输入和参数解析强大功能。这个工具主要是用来实现用户在命令的交互。
 + mocha：JavaScript的一种单元测试框架，既可以在浏览器环境下运行，也可以在Node.js环境下运行。
 + serialize-json：json数据的序列化和解析
++ browser-sync：可刷新浏览器，用户本地代码更新后刷新浏览器
+
+## RPC
++ DNode是一个非常灵巧的异步RPC系统，既可以运行在node.js中，也可以通过Browserify运行在浏览器中。
++ Moleculer主要解决的是Node.js的微服务开发、部署和配套设施搭建问题。
++ Noonoservices
++ Micro
+
+## 微服务框架
+Seneca是Nodejs微服务架构开发工具，能够快速构建基于消息的微服务系统。无需知道服务部署在何处，具体有多少服务，以及服务个字的指责，因为业务逻辑之外的服务都被Seance隐藏在微服务之后。
 
 ## 中间件
 + body-parser
