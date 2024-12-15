@@ -314,6 +314,7 @@ anywhere
 + mocha：JavaScript的一种单元测试框架，既可以在浏览器环境下运行，也可以在Node.js环境下运行。
 + serialize-json：json数据的序列化和解析
 + browser-sync：可刷新浏览器，用户本地代码更新后刷新浏览器
++ consolidate.js：一款javascript模版引擎整合模块，支持现今流行的多种模版引擎，是功能强大的模板引擎整合库。
 
 ## RPC
 + DNode是一个非常灵巧的异步RPC系统，既可以运行在node.js中，也可以通过Browserify运行在浏览器中。
